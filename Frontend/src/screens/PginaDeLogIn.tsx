@@ -1,4 +1,5 @@
 import * as React from "react";
+import axios  from 'axios';
 import { StyleSheet, Text, TextInput, View, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -8,18 +9,33 @@ import Google from "../../assets/images/google.svg";
 import Eye from "../../assets/images/eye.svg";
 import Apple from '../../assets/images/apple.svg'
 
-const PginaDeLogIn = () => {
+const PginaDeLogIn = ({ navigation }) => {
   const [email, setEmail] = React.useState("");
   const [senha, setSenha] = React.useState("");
   const [showSenha, setShowSenha] = React.useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     // lógica de login aqui
+        if (!email || !senha) {
+      alert("Preencha todos os campos")
+      return
+    }
+    const response = await axios.post("http://localhost:3000/login", {
+      email,
+      senha,
+    });
 
+    console.log("resposta do servidor: ", response.data)
+    const {compuse} = response.data
+    alert(`Bem-vindo`)
+    
+    setEmail("")
+    setSenha("")
   };
 
   const handleCadastro = () => {
     // lógica de cadastro aqui
+    navigation.navigate("Cadastro")
   };
 
   const handleEsqueciSenha = () => {

@@ -1,21 +1,41 @@
 import * as React from "react";
+import axios  from 'axios';
 import { StyleSheet, Text, TextInput, View, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Eye from "../../assets/images/eye.svg";
 
-const PginaDeCadastro = () => {
+const PginaDeCadastro = ({ navigation }) => {
   const [nome, setNome] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [senha, setSenha] = React.useState("");
   const [confirmaSenha, setConfirmaSenha] = React.useState("");
   const [showSenha, setShowSenha] = React.useState(false);
 
-  const handleCadastro = () => {
+  const handleCadastro = async () => {
     // lógica de cadastro aqui
+    if (!nome || !email || !senha) {
+      alert("Preencha todos os campos")
+      return
+    }
+    const response = await axios.post("http://localhost:3000/tutor", {
+      nome,
+      email,
+      senha,
+    });
+
+    console.log("resposta do servidor: ", response.data)
+
+    alert("Usuário cadastrado com sucesso!")
+
+    setNome("")
+    setEmail("")
+    setSenha("")
+    setConfirmaSenha("")
   };
 
   const handleLogin = () => {
     // navegação para login
+    navigation.navigate("Login")
   };
 
   return (

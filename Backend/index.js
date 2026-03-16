@@ -57,6 +57,26 @@ app.post('/login', (req, res) => {
     })
 })
 
+app.put('/tutor/:id', (req, res) => {
+    // Pegamos o ID que vem na URL
+    const id = req.params.id
+    // Pegamos os novos dados que vêm do Front
+    const { nome, email } = req.body;
+    const updateQuery = 'UPDATE tb_tutor SET nome = ?, email = ? WHERE codigo_tutor = ?'
+    connection.query(updateQuery, [nome, email, id], (err, results) => {
+        if (err) {
+            console.error('Erro ao atualizar:', err)
+            return res.json({ error: "Erro ao atualizar tutor" })
+        }
+        // Verifica se alguma linha foi realmente alterada
+        if (results.affectedRows === 0) {
+            return res.json({ error: "Tutor não encontrado" })
+        }
+        res.json({ mensagem: "Tutor atualizado com sucesso!" })
+    })
+})
+
+
 app.delete('/tutor/:id', (req, res) => {
     // Pega o ID que vem na URL
     const id = req.params.id
@@ -66,7 +86,7 @@ app.delete('/tutor/:id', (req, res) => {
             console.error('Erro ao deletar:', err);
             return res.json({ error: "Erro ao deletar tutor" })
         }
-        // Verifica se o ID existia no banco antes de deletar
+        // Verifica se o ID existe no banco antes de deletar
         if (results.affectedRows === 0) {
             return res.json({ error: "Tutor não encontrado" })
         }

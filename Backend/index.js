@@ -17,27 +17,36 @@ const connection = mysql.createConnection({
 
 connection.connect((err) => {
     if (err) {
-        console.error('Erro ao conectar ao banco de dados:', err.stack);
-        return;
+        console.error('Erro ao conectar ao banco de dados:', err.stack)
+        return
     }
-    console.log('Conexão bem-sucedida ao banco de dados com o ID: ', connection.threadId);
-});
+    console.log('Conexão bem-sucedida ao banco de dados com o ID: ', connection.threadId)
+})
 
-app.post('/tutor', async (req, res) => {
-    try {
-        const nome = req.body.nome
-        const email = req.body.email
-        const senha = req.body.senha
-        const hasheada = await bcrypt.hash(senha, 10)
-        const insert = 'INSERT INTO tb_tutor (nome, email, senha) VALUES (?, ?, ?)'
-        connection.query(insert, [nome, email, hasheada], (err, results, fields) => {
-            console.log(results)
-            console.log(fields)
-            res.send('Da um select no banco pra ter certeza')
+app.post('/tutor', (req, res) => {
+    const { nome, email, senha } = req.body;
+    // 1. Busca no banco se já tem alguém com esse e-mail
+    connection.promise().query('SELECT * FROM tb_tutor WHERE email = ?', [email])
+        .then(([rows]) => {
+            if (rows.length > 0) {
+                // Se achou, a gente aborta a missão e manda pro catch
+                return Promise.reject("Este e-mail já está cadastrado.")
+            }
+            // 2. Se o e-mail tá livre, fazemos o hash da senha
+            return bcrypt.hash(senha, 10)
         })
-    } catch (error) {
-        console.log('Algo deu errado')
-    }
+        .then((hasheada) => {
+            // 3. Com a senha hasheada, inserimos no banco
+            const insert = 'INSERT INTO tb_tutor (nome, email, senha) VALUES (?, ?, ?)'
+            return connection.promise().query(insert, [nome, email, hasheada])
+        })
+        .then(() => {
+            res.json("Da um select no banco pra ter certeza")
+        })
+        .catch((erro) => {
+            // Se o erro veio do Promise.reject lá de cima, mandamos a mensagem bonitinha
+            res.json(erro)
+        })
 })
 
 app.post('/login', (req, res) => {
@@ -46,34 +55,37 @@ app.post('/login', (req, res) => {
     const user = 'SELECT * FROM tb_tutor WHERE email = ?'
     connection.query(user, [email], async (err, results, fields) => {
         if (results.length === 0) {
-            return res.status(404).json({ error: "Usuário não encontrado" })
+            return res.status(404).json("Usuário não encontrado")
         }
         const compuse = results[0]
         const senhaIgual = await bcrypt.compare(senha, compuse.senha)
         if (!senhaIgual) {
-            return res.status(401).json({ mensagem: "senha inválida" })
+            return res.json("senha inválida" )
         }
         res.end()
     })
 })
 
-app.put('/tutor/:id', (req, res) => {
-    // Pegamos o ID que vem na URL
-    const id = req.params.id
-    // Pegamos os novos dados que vêm do Front
-    const { nome, email } = req.body;
-    const updateQuery = 'UPDATE tb_tutor SET nome = ?, email = ? WHERE codigo_tutor = ?'
-    connection.query(updateQuery, [nome, email, id], (err, results) => {
-        if (err) {
-            console.error('Erro ao atualizar:', err)
-            return res.json({ error: "Erro ao atualizar tutor" })
+app.put('/tutor/:id', async (req, res) => {
+    try {
+        const id = req.params.id
+        const { nome, email } = req.body
+        const checkEmailQuery = 'SELECT * FROM tb_tutor WHERE email = ? AND codigo_tutor != ?'
+        const [rows] = await connection.promise().query(checkEmailQuery, [email, id])
+
+        if (rows.length > 0) {
+            return res.json("Este e-mail já está em uso." )
         }
-        // Verifica se alguma linha foi realmente alterada
+        
+        const updateQuery = 'UPDATE tb_tutor SET nome = ?, email = ? WHERE codigo_tutor = ?'
+        const [results] = await connection.promise().query(updateQuery, [nome, email, id])
         if (results.affectedRows === 0) {
-            return res.json({ error: "Tutor não encontrado" })
+            return res.json("Tutor não encontrado.")
         }
-        res.json({ mensagem: "Tutor atualizado com sucesso!" })
-    })
+        res.json("Dados atualizados com sucesso!" )
+    } catch (erro) {
+        console.error('Erro ao atualizar:', erro)
+    }
 })
 
 
@@ -83,14 +95,13 @@ app.delete('/tutor/:id', (req, res) => {
     const deleteQuery = 'DELETE FROM tb_tutor WHERE codigo_tutor = ?'
     connection.query(deleteQuery, [id], (err, results) => {
         if (err) {
-            console.error('Erro ao deletar:', err);
-            return res.json({ error: "Erro ao deletar tutor" })
+            return res.json("Erro ao deletar tutor" )
         }
         // Verifica se o ID existe no banco antes de deletar
         if (results.affectedRows === 0) {
-            return res.json({ error: "Tutor não encontrado" })
+            return res.json("Tutor não encontrado")
         }
-        res.json({ mensagem: "Tutor deletado com sucesso!" })
+        res.json("Tutor deletado com sucesso!")
     })
 })
 

@@ -57,6 +57,23 @@ app.post('/login', (req, res) => {
     })
 })
 
+app.delete('/tutor/:id', (req, res) => {
+    // Pega o ID que vem na URL
+    const id = req.params.id
+    const deleteQuery = 'DELETE FROM tb_tutor WHERE codigo_tutor = ?'
+    connection.query(deleteQuery, [id], (err, results) => {
+        if (err) {
+            console.error('Erro ao deletar:', err);
+            return res.json({ error: "Erro ao deletar tutor" })
+        }
+        // Verifica se o ID existia no banco antes de deletar
+        if (results.affectedRows === 0) {
+            return res.json({ error: "Tutor não encontrado" })
+        }
+        res.json({ mensagem: "Tutor deletado com sucesso!" })
+    })
+})
+
 app.get('/hello', (req, res) => {
     res.send('Olá Mundo')
 })

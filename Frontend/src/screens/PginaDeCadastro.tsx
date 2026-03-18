@@ -12,25 +12,49 @@ const PginaDeCadastro = ({ navigation }) => {
   const [showSenha, setShowSenha] = React.useState(false);
 
   const handleCadastro = async () => {
-    // lógica de cadastro aqui
-    if (!nome || !email || !senha) {
-      alert("Preencha todos os campos")
-      return
+    // 1. Verifica se os campos estão vazios
+    if (!nome || !email || !senha || !confirmaSenha) {
+      alert("Preencha todos os campos");
+      return;
     }
-    const response = await axios.post("http://localhost:3000/tutor", {
-      nome,
-      email,
-      senha,
-    });
 
-    console.log("resposta do servidor: ", response.data)
+    // 2. Verifica se a senha e a confirmação são iguais
+    if (senha !== confirmaSenha) {
+      alert("As senhas não conferem!");
+      return;
+    }
 
-    alert("Usuário cadastrado com sucesso!")
+    try {
+      const response = await axios.post("http://localhost:3000/tutor", {
+        nome,
+        email,
+        senha,
+      });
 
-    setNome("")
-    setEmail("")
-    setSenha("")
-    setConfirmaSenha("")
+      console.log("resposta do servidor: ", response.data);
+
+      // 3. Lê a resposta do backend. Se for a mensagem de erro, exibe o alerta e para a função.
+      if (response.data === "Este e-mail já está cadastrado.") {
+        alert("Este e-mail já está cadastrado!");
+        return; 
+      }
+
+      // 4. Se passou pelas validações e o backend não acusou erro, é sucesso!
+      alert("Usuário cadastrado com sucesso!");
+
+      // Limpa os campos
+      setNome("");
+      setEmail("");
+      setSenha("");
+      setConfirmaSenha("");
+      
+      // Redirecionar para o login automaticamente
+      navigation.navigate("Login");
+
+    } catch (error) {
+      console.error("Erro na requisição: ", error);
+      alert("Erro ao conectar com o servidor.");
+    }
   };
 
   const handleLogin = () => {

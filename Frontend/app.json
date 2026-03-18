@@ -19,10 +19,17 @@
         "foregroundImage": "",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.alicia_muniz.frontend"
     },
     "web": {
       "favicon": ""
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "526471aa-c5b2-4ec4-91eb-e43c122066c2"
+      }
+    },
+    "owner": "alicia_muniz"
   }
 }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import axios  from 'axios';
-import { StyleSheet, Text, TextInput, View, Pressable } from "react-native";
+import { StyleSheet, Text, TextInput, View, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Eye from "../../assets/images/eye.svg";
 
@@ -11,21 +11,22 @@ const PginaDeCadastro = ({ navigation }) => {
   const [confirmaSenha, setConfirmaSenha] = React.useState("");
   const [showSenha, setShowSenha] = React.useState(false);
 
-  const handleCadastro = async () => {
+const handleCadastro = async () => {
     // 1. Verifica se os campos estão vazios
     if (!nome || !email || !senha || !confirmaSenha) {
-      alert("Preencha todos os campos");
+      Alert.alert("Atenção", "Preencha todos os campos!");
       return;
     }
 
-    // 2. Verifica se a senha e a confirmação são iguais
+    // 2. Verifica se as senhas batem
     if (senha !== confirmaSenha) {
-      alert("As senhas não conferem!");
+      Alert.alert("Atenção", "As senhas não conferem!");
       return;
     }
 
     try {
-      const response = await axios.post("http://localhost:3000/tutor", {
+      // 3. ATENÇÃO: Usa o IP da tua máquina em vez de localhost!
+      const response = await axios.post("http://192.168.0.6:3000/tutor", {
         nome,
         email,
         senha,
@@ -33,27 +34,23 @@ const PginaDeCadastro = ({ navigation }) => {
 
       console.log("resposta do servidor: ", response.data);
 
-      // 3. Lê a resposta do backend. Se for a mensagem de erro, exibe o alerta e para a função.
+      // 4. Se o backend devolver a mensagem de erro
       if (response.data === "Este e-mail já está cadastrado.") {
-        alert("Este e-mail já está cadastrado!");
+        Alert.alert("Erro", "Este e-mail já está cadastrado!");
         return; 
       }
-
-      // 4. Se passou pelas validações e o backend não acusou erro, é sucesso!
-      alert("Usuário cadastrado com sucesso!");
-
+      // 5. Se deu tudo certo
+      Alert.alert("Sucesso!", "Usuário cadastrado com sucesso!");
       // Limpa os campos
       setNome("");
       setEmail("");
       setSenha("");
       setConfirmaSenha("");
-      
-      // Redirecionar para o login automaticamente
       navigation.navigate("Login");
 
     } catch (error) {
       console.error("Erro na requisição: ", error);
-      alert("Erro ao conectar com o servidor.");
+      Alert.alert("Erro de Conexão", "Não foi possível ligar ao servidor. Verifica o IP e se o backend está ligado.");
     }
   };
 

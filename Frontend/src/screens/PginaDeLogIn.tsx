@@ -1,6 +1,6 @@
 import * as React from "react";
 import axios  from 'axios';
-import { StyleSheet, Text, TextInput, View, Pressable } from "react-native";
+import { StyleSheet, Text, TextInput, View, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 
@@ -14,24 +14,36 @@ const PginaDeLogIn = ({ navigation }) => {
   const [senha, setSenha] = React.useState("");
   const [showSenha, setShowSenha] = React.useState(false);
 
-  const handleLogin = async () => {
-    // lógica de login aqui
-        if (!email || !senha) {
-      alert("Preencha todos os campos")
-      return
+ const handleLogin = async () => {
+    // 1. Verifica se os campos estão vazios
+    if (!email || !senha) {
+      Alert.alert("Atenção", "Preencha todos os campos!");
+      return;
     }
-    const response = await axios.post("http://localhost:3000/login", {
-      email,
-      senha,
-    });
 
-    console.log("resposta do servidor: ", response.data)
-    const {compuse} = response.data
-    alert(`Bem-vindo`)
-    
-    setEmail("")
-    setSenha("")
-  };
+    try {
+      // 2. Faz a requisição para o backend 
+      const response = await axios.post("http://192.168.0.6:3000/login", {
+        email,
+        senha,
+      });
+
+      // 3. Lê a resposta do seu backend para tratar senhas inválidas 
+      if (response.data === "senha inválida") {
+        Alert.alert("Ops!", "Senha inválida. Tente novamente.");
+        return;
+      }
+      // 4. Se passou por tudo, exibe a mensagem de sucesso!
+      Alert.alert("Sucesso!", "Bem-vindo(a) ao Guia Pet!");
+      
+      // Limpa os campos
+      setEmail("");
+      setSenha("");
+    } catch (erro) {
+        console.error("Erro no login:", erro);
+        Alert.alert("Erro de Conexão", "Não foi possível ligar ao servidor.");
+    }
+  }
 
   const handleCadastro = () => {
     // lógica de cadastro aqui

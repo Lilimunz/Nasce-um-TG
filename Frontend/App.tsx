@@ -7,6 +7,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import PginaDeLogIn from "./src/screens/PginaDeLogIn";
 import PginaDeCadastro from "./src/screens/PginaDeCadastro";
+import { PaginaPrincipal } from './src/screens/PginaPrincipal';
 
 const Stack = createStackNavigator() 
 
@@ -32,6 +33,7 @@ export default function App() {
         >
           <Stack.Screen name="Login" component={PginaDeLogIn} />
           <Stack.Screen name="Cadastro" component={PginaDeCadastro} />
+          <Stack.Screen name="Home" component={PaginaPrincipal} />
         </Stack.Navigator>
       </NavigationContainer>
       <StatusBar style="light" />

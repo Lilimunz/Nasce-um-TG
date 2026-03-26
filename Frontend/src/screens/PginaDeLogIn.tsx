@@ -2,7 +2,7 @@ import * as React from "react";
 import axios  from 'axios';
 import { StyleSheet, Text, TextInput, View, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Facebook from "../../assets/images/facebook.svg";
 import Google from "../../assets/images/google.svg";
@@ -20,25 +20,38 @@ const PginaDeLogIn = ({ navigation }) => {
       Alert.alert("Atenção", "Preencha todos os campos!");
       return;
     }
-
     try {
       // 2. Faz a requisição para o backend 
       const response = await axios.post("http://192.168.0.6:3000/login", {
         email,
         senha,
       });
-
       // 3. Lê a resposta do seu backend para tratar senhas inválidas 
       if (response.data === "senha inválida") {
         Alert.alert("Ops!", "Senha inválida. Tente novamente.");
         return;
       }
-      // 4. Se passou por tudo, exibe a mensagem de sucesso!
+      
+      // 4. Tenta recuperar o nome do usuário baseado no email
+      try {
+        const usuarioResponse = await axios.get(`http://192.168.0.6:3000/usuario/${email}`);
+        if (usuarioResponse.data && usuarioResponse.data.nome) {
+          await AsyncStorage.setItem('nomeUsuario', usuarioResponse.data.nome);
+          await AsyncStorage.setItem('emailUsuario', email);
+        }
+      } catch (erro) {
+        // Se não conseguir recuperar, armazena apenas o email
+        console.log("Não foi possível recuperar nome do usuário:", erro);
+        await AsyncStorage.setItem('emailUsuario', email);
+      }
+      
+      // 5. Se passou por tudo, exibe a mensagem de sucesso!
       Alert.alert("Sucesso!", "Bem-vindo(a) ao Guia Pet!");
       
       // Limpa os campos
       setEmail("");
       setSenha("");
+      navigation.replace("Home"); // Navega para a tela principal, substituindo a tela de login  
     } catch (erro) {
         console.error("Erro no login:", erro);
         Alert.alert("Erro de Conexão", "Não foi possível ligar ao servidor.");
@@ -52,6 +65,11 @@ const PginaDeLogIn = ({ navigation }) => {
 
   const handleEsqueciSenha = () => {
     // lógica de esqueci senha aqui
+  };
+
+  const handleHome = () => {
+    // lógica de cadastro aqui
+    navigation.navigate("Home")
   };
 
   return (

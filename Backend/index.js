@@ -105,6 +105,20 @@ app.delete('/tutor/:id', (req, res) => {
     })
 })
 
+app.get('/usuario/:email', (req, res) => {
+    const email = req.params.email
+    const query = 'SELECT nome, email FROM tb_tutor WHERE email = ?'
+    connection.query(query, [email], (err, results) => {
+        if (err) {
+            return res.json({ erro: "Erro ao buscar usuário" })
+        }
+        if (results.length === 0) {
+            return res.json({ erro: "Usuário não encontrado" })
+        }
+        res.json(results[0])
+    })
+})
+
 app.get('/hello', (req, res) => {
     res.send('Olá Mundo')
 })

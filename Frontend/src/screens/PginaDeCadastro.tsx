@@ -2,6 +2,7 @@ import * as React from "react";
 import axios  from 'axios';
 import { StyleSheet, Text, TextInput, View, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Eye from "../../assets/images/eye.svg";
 
 const PginaDeCadastro = ({ navigation }) => {
@@ -39,7 +40,12 @@ const handleCadastro = async () => {
         Alert.alert("Erro", "Este e-mail já está cadastrado!");
         return; 
       }
-      // 5. Se deu tudo certo
+      
+      // 5. Armazena o nome do usuário no AsyncStorage
+      await AsyncStorage.setItem('nomeUsuario', nome);
+      await AsyncStorage.setItem('emailUsuario', email);
+      
+      // 6. Se deu tudo certo
       Alert.alert("Sucesso!", "Usuário cadastrado com sucesso!");
       // Limpa os campos
       setNome("");

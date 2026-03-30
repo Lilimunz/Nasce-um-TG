@@ -1,8 +1,10 @@
 import * as React from "react";
-import axios  from 'axios';
+import axios from 'axios';
 import { StyleSheet, Text, TextInput, View, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 import Facebook from "../../assets/images/facebook.svg";
 import Google from "../../assets/images/google.svg";
@@ -14,47 +16,75 @@ const PginaDeLogIn = ({ navigation }) => {
   const [senha, setSenha] = React.useState("");
   const [showSenha, setShowSenha] = React.useState(false);
 
- const handleLogin = async () => {
+  const handleLogin = async () => {
+    const emailNormalizado = email.trim().toLowerCase();
+    const senhaNormalizada = senha;
+
     // 1. Verifica se os campos estão vazios
-    if (!email || !senha) {
+    if (!emailNormalizado || !senhaNormalizada) {
       Alert.alert("Atenção", "Preencha todos os campos!");
       return;
     }
     try {
       // 2. Faz a requisição para o backend 
-      const response = await axios.post("http://192.168.0.6:3000/login", {
-        email,
-        senha,
+      const response = await axios.post(`${API_URL}/login`, {
+        email: emailNormalizado,
+        senha: senhaNormalizada,
       });
       // 3. Lê a resposta do seu backend para tratar senhas inválidas 
       if (response.data === "senha inválida") {
         Alert.alert("Ops!", "Senha inválida. Tente novamente.");
         return;
       }
-      
-      // 4. Tenta recuperar o nome do usuário baseado no email
-      try {
-        const usuarioResponse = await axios.get(`http://192.168.0.6:3000/usuario/${email}`);
-        if (usuarioResponse.data && usuarioResponse.data.nome) {
-          await AsyncStorage.setItem('nomeUsuario', usuarioResponse.data.nome);
-          await AsyncStorage.setItem('emailUsuario', email);
-        }
-      } catch (erro) {
-        // Se não conseguir recuperar, armazena apenas o email
-        console.log("Não foi possível recuperar nome do usuário:", erro);
-        await AsyncStorage.setItem('emailUsuario', email);
+      if (response.data === "Usuário não encontrado") {
+        Alert.alert("Ops!", "Usuário não encontrado.");
+        return;
       }
-      
+      if (response.data === "Erro interno no login") {
+        Alert.alert("Erro", "Não foi possível concluir o login.");
+        return;
+      }
+
+      if (response.data && response.data.codigo_tutor !== undefined && response.data.codigo_tutor !== null) {
+        await AsyncStorage.setItem('codigoTutor', String(response.data.codigo_tutor));
+        if (response.data.nome) {
+          await AsyncStorage.setItem('nomeUsuario', String(response.data.nome));
+        }
+        await AsyncStorage.setItem('emailUsuario', emailNormalizado);
+      } else {
+        // Fallback para compatibilidade caso o backend ainda retorne no formato antigo.
+        try {
+          const usuarioResponse = await axios.get(`${API_URL}/usuario/${encodeURIComponent(emailNormalizado)}`);
+          if (usuarioResponse.data && usuarioResponse.data.nome) {
+            await AsyncStorage.setItem('nomeUsuario', usuarioResponse.data.nome);
+            await AsyncStorage.setItem('emailUsuario', emailNormalizado);
+            if (usuarioResponse.data.codigo_tutor !== undefined && usuarioResponse.data.codigo_tutor !== null) {
+              await AsyncStorage.setItem('codigoTutor', String(usuarioResponse.data.codigo_tutor));
+            } else {
+              Alert.alert("Erro", "Não foi possível recuperar o código do tutor.");
+              return;
+            }
+          } else {
+            Alert.alert("Erro", "Não foi possível recuperar os dados do usuário.");
+            return;
+          }
+        } catch (erro) {
+          console.log("Não foi possível recuperar dados do usuário:", erro);
+          Alert.alert("Erro", "Não foi possível recuperar o código do tutor.");
+          return;
+        }
+      }
+
       // 5. Se passou por tudo, exibe a mensagem de sucesso!
       Alert.alert("Sucesso!", "Bem-vindo(a) ao Guia Pet!");
-      
+
       // Limpa os campos
       setEmail("");
       setSenha("");
       navigation.replace("Home"); // Navega para a tela principal, substituindo a tela de login  
     } catch (erro) {
-        console.error("Erro no login:", erro);
-        Alert.alert("Erro de Conexão", "Não foi possível ligar ao servidor.");
+      console.error("Erro no login:", erro);
+      Alert.alert("Erro de Conexão", "Não foi possível ligar ao servidor.");
     }
   }
 

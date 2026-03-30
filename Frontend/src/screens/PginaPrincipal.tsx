@@ -3,11 +3,11 @@ import {
     View,
     Text,
     StyleSheet,
-    SafeAreaView,
     TouchableOpacity,
     ScrollView,
     Image
 } from 'react-native';
+import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Calendario from "../../assets/images/calendario.png";
 import Localizacao from "../../assets/images/maps.png";
@@ -16,7 +16,7 @@ import Configuracao from "../../assets/images/config.png";
 import Racao from "../../assets/images/racao.png";
 
 
-export function PaginaPrincipal() {
+export function PaginaPrincipal({ navigation }) {
     const [nomeUsuario, setNomeUsuario] = useState('Usuário');
 
     return (
@@ -29,7 +29,10 @@ export function PaginaPrincipal() {
             {/* Main Content */}
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {/* Adicionar Pet Section */}
-                <TouchableOpacity style={styles.adicionarPetCard}>
+                <TouchableOpacity
+                    style={styles.adicionarPetCard}
+                    onPress={() => navigation.navigate("Cadastro")}
+                >
                     <Text style={styles.adicionarPetLabel}>Adicionar pet</Text>
                     <Text style={styles.adicionarPetIcon}>+</Text>
                 </TouchableOpacity>

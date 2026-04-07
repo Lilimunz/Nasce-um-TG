@@ -8,8 +8,9 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import PginaDeLogIn from "./src/screens/PginaDeLogIn";
 import PginaDeCadastro from "./src/screens/PginaDeCadastro";
 import { PaginaPrincipal } from './src/screens/PginaPrincipal';
+import PginaDeCadia from "./src/screens/PginaDeCadia";
 
-const Stack = createStackNavigator() 
+const Stack = createStackNavigator()
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -27,12 +28,13 @@ export default function App() {
     <SafeAreaProvider>
       <NavigationContainer>
         {/* 'initialRouteName' define qual tela abre primeiro. Geralmente é o Login. */}
-        <Stack.Navigator 
+        <Stack.Navigator
           initialRouteName="Login"
           screenOptions={{ headerShown: false }}
         >
           <Stack.Screen name="Login" component={PginaDeLogIn} />
-          <Stack.Screen name="Cadastro" component={PginaDeCadastro} />
+          <Stack.Screen name="Cadastro" component={PginaDeCadia} />
+          <Stack.Screen name="CadastroPrincipal" component={PginaDeCadastro} />
           <Stack.Screen name="Home" component={PaginaPrincipal} />
         </Stack.Navigator>
       </NavigationContainer>

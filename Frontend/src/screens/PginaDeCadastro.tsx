@@ -5,6 +5,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Eye from "../../assets/images/eye.svg";
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
 const PginaDeCadastro = ({ navigation }) => {
   const [nome, setNome] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -27,7 +29,7 @@ const handleCadastro = async () => {
 
     try {
       // 3. ATENÇÃO: Usa o IP da tua máquina em vez de localhost!
-      const response = await axios.post("http://192.168.0.6:3000/tutor", {
+      const response = await axios.post(`${API_URL}/tutor`, {
         nome,
         email,
         senha,

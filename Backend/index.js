@@ -1,7 +1,7 @@
 require('dotenv').config()
 
 const bcrypt = require('bcrypt')
-const cors = require ('cors')
+const cors = require('cors')
 const express = require('express')
 const mysql = require('mysql2')
 const app = express()
@@ -54,15 +54,23 @@ app.post('/login', (req, res) => {
     const senha = req.body.senha
     const user = 'SELECT * FROM tb_tutor WHERE email = ?'
     connection.query(user, [email], async (err, results, fields) => {
+        if (err) {
+            return res.json("Erro interno no login")
+        }
         if (results.length === 0) {
-            return res.status(404).json("Usuário não encontrado")
+            return res.json("Usuário não encontrado")
         }
         const compuse = results[0]
         const senhaIgual = await bcrypt.compare(senha, compuse.senha)
         if (!senhaIgual) {
-            return res.json("senha inválida" )
+            return res.json("senha inválida")
         }
-        res.end()
+        return res.json({
+            mensagem: "Login realizado com sucesso",
+            codigo_tutor: compuse.codigo_tutor,
+            nome: compuse.nome,
+            email: compuse.email,
+        })
     })
 })
 
@@ -74,15 +82,15 @@ app.put('/tutor/:id', async (req, res) => {
         const [rows] = await connection.promise().query(checkEmailQuery, [email, id])
 
         if (rows.length > 0) {
-            return res.json("Este e-mail já está em uso." )
+            return res.json("Este e-mail já está em uso.")
         }
-        
+
         const updateQuery = 'UPDATE tb_tutor SET nome = ?, email = ? WHERE codigo_tutor = ?'
         const [results] = await connection.promise().query(updateQuery, [nome, email, id])
         if (results.affectedRows === 0) {
             return res.json("Tutor não encontrado.")
         }
-        res.json("Dados atualizados com sucesso!" )
+        res.json("Dados atualizados com sucesso!")
     } catch (erro) {
         console.error('Erro ao atualizar:', erro)
     }
@@ -95,7 +103,7 @@ app.delete('/tutor/:id', (req, res) => {
     const deleteQuery = 'DELETE FROM tb_tutor WHERE codigo_tutor = ?'
     connection.query(deleteQuery, [id], (err, results) => {
         if (err) {
-            return res.json("Erro ao deletar tutor" )
+            return res.json("Erro ao deletar tutor")
         }
         // Verifica se o ID existe no banco antes de deletar
         if (results.affectedRows === 0) {
@@ -107,7 +115,7 @@ app.delete('/tutor/:id', (req, res) => {
 
 app.get('/usuario/:email', (req, res) => {
     const email = req.params.email
-    const query = 'SELECT nome, email FROM tb_tutor WHERE email = ?'
+    const query = 'SELECT codigo_tutor, nome, email FROM tb_tutor WHERE email = ?'
     connection.query(query, [email], (err, results) => {
         if (err) {
             return res.json({ erro: "Erro ao buscar usuário" })
@@ -118,6 +126,36 @@ app.get('/usuario/:email', (req, res) => {
         res.json(results[0])
     })
 })
+
+
+app.post('/pet', async (req, res) => {
+    try {
+        const { nome, especie, peso, porte, codigo_tutor } = req.body
+
+        const insertQuery = 'INSERT INTO tb_pet (nome, especie, peso, porte, codigo_tutor) VALUES (?, ?, ?, ?, ?)'
+
+        await connection.promise().query(insertQuery, [nome, especie, peso, porte, codigo_tutor])
+
+        res.json({ mensagem: "Pet cadastrado com sucesso!" })
+    } catch (erro) {
+        console.error('Erro ao cadastrar pet:', erro)
+        res.json({ error: "Erro interno ao cadastrar o pet." })
+    }
+})
+
+app.get('/pets/:codigo_tutor', async (req, res) => {
+    try {
+        // Pegamos o ID do tutor pela URL
+        const codigo_tutor = req.params.codigo_tutor;
+        const selectQuery = 'SELECT * FROM tb_pet WHERE codigo_tutor = ?';
+        const [rows] = await connection.promise().query(selectQuery, [codigo_tutor]);
+        // Devolvemos a lista de pets para o React Native (mesmo que seja uma lista vazia se ele não tiver nenhum)
+        res.json(rows);
+    } catch (erro) {
+        console.error('Erro ao buscar pets:', erro);
+        res.json({ error: "Erro interno ao buscar os pets." });
+    }
+});
 
 app.get('/hello', (req, res) => {
     res.send('Olá Mundo')

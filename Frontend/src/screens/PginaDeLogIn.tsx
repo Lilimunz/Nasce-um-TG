@@ -51,6 +51,16 @@ const PginaDeLogIn = ({ navigation }) => {
           await AsyncStorage.setItem('nomeUsuario', String(response.data.nome));
         }
         await AsyncStorage.setItem('emailUsuario', emailNormalizado);
+
+        // Buscar perfil completo do tutor (com pets) no backend
+        try {
+          const perfilResponse = await axios.get(`${API_URL}/tutor/${response.data.codigo_tutor}/perfil`);
+          if (perfilResponse.data && perfilResponse.data.pets) {
+            await AsyncStorage.setItem('petsList', JSON.stringify(perfilResponse.data.pets));
+          }
+        } catch (erroInterno) {
+          console.log("Aviso: Não foi possível carregar os pets no login, será carregado mais tarde:", erroInterno);
+        }
       } else {
         // Fallback para compatibilidade caso o backend ainda retorne no formato antigo.
         try {

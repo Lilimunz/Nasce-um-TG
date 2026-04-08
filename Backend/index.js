@@ -8,26 +8,29 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 
-const connection = mysql.createConnection({
+const connection = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     database: process.env.DB_DATABASE,
     password: process.env.DB_PASSWORD,
-    charset: 'utf8mb4'
-})
+    charset: 'utf8mb4',
+    waitForConnections: true,
+    connectionLimit: 10, // Permite até 10 conexões simultâneas
+    queueLimit: 0
+});
 
-connection.connect((err) => {
+// Testando se o Pool conseguiu se conectar
+connection.getConnection((err, conn) => {
     if (err) {
-        console.error('Erro ao conectar ao banco de dados:', err.stack)
-        return
+        console.error('Erro ao conectar ao banco de dados pelo Pool:', err.stack);
+        return;
     }
-    connection.query("SET NAMES utf8mb4", (setErr) => {
-        if (setErr) {
-            console.error('Erro ao configurar charset utf8mb4:', setErr)
-        }
-    })
-    console.log('Conexão bem-sucedida ao banco de dados com o ID: ', connection.threadId)
-})
+    conn.query("SET NAMES utf8mb4", (setErr) => {
+        if (setErr) console.error('Erro ao configurar charset utf8mb4:', setErr);
+    });
+    console.log('Conexão via Pool bem-sucedida! ID: ', conn.threadId);
+    conn.release(); // Libera a conexão de volta pro Pool
+});
 
 app.post('/tutor', (req, res) => {
     const { nome, email, senha } = req.body;

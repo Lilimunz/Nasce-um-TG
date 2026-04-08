@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 18.4.0",
+    "version": ">= 18.4.0"
   },
   "build": {
     "development": {
@@ -12,6 +12,10 @@
         "buildType": "apk"
       }
     },
+    "env": {
+        "EXPO_PUBLIC_API_URL": "https://nasce-um-tg-production.up.railway.app"
+      }
+      ,
     "preview2": {
 	    "android": {
 	      "gradleCommand": "app:assembleRealease"

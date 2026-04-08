@@ -100,7 +100,7 @@ const PginaDeLogIn = ({ navigation }) => {
 
   const handleCadastro = () => {
     // lógica de cadastro aqui
-    navigation.navigate("Cadastro")
+    navigation.navigate("CadastroPrincipal")
   };
 
   const handleEsqueciSenha = () => {
@@ -109,7 +109,7 @@ const PginaDeLogIn = ({ navigation }) => {
 
   const handleHome = () => {
     // lógica de cadastro aqui
-    navigation.navigate("Home")
+    navigation.navigate("Cadastro")
   };
 
   return (

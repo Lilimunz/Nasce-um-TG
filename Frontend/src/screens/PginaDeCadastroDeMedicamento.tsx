@@ -9,6 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -40,7 +41,16 @@ const FREQUENCIAS = [
   "Conforme necessário",
 ];
 
+type Pet = {
+  codigo_pet: number;
+  nome: string;
+  especie?: string;
+  raca?: string;
+};
+
 const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
+  const [pets, setPets] = React.useState<Pet[]>([]);
+  const [selectedPet, setSelectedPet] = React.useState<Pet | null>(null);
   const [nomeMedicamento, setNomeMedicamento] = React.useState("");
   const [classificacao, setClassificacao] = React.useState("");
   const [dataValidade, setDataValidade] = React.useState("");
@@ -48,16 +58,49 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
   const [frequencia, setFrequencia] = React.useState("");
   const [dataInicio, setDataInicio] = React.useState("");
   const [dataFim, setDataFim] = React.useState("");
+  const [showPetOptions, setShowPetOptions] = React.useState(false);
   const [showClassificacaoOptions, setShowClassificacaoOptions] = React.useState(false);
   const [showFrequenciaOptions, setShowFrequenciaOptions] = React.useState(false);
-  const [selectedPet, setSelectedPet] = React.useState(null);
   const [salvando, setSalvando] = React.useState(false);
+
+  React.useEffect(() => {
+    carregarPets();
+  }, []);
 
   React.useEffect(() => {
     if (route?.params?.petData) {
       setSelectedPet(route.params.petData);
     }
   }, [route?.params?.petData]);
+
+  const carregarPets = async () => {
+    try {
+      const codigoTutor = await AsyncStorage.getItem("codigoTutor");
+      if (!codigoTutor) {
+        Alert.alert("Erro", "Tutor não identificado.");
+        return;
+      }
+
+      const response = await axios.get(`${API_URL}/tutor/${codigoTutor}/perfil`);
+      if (response.data?.pets) {
+        setPets(response.data.pets);
+      }
+    } catch (erro) {
+      console.error("Erro ao carregar pets:", erro);
+      Alert.alert("Erro", "Não foi possível carregar os pets.");
+    }
+  };
+
+  const formatarDataDigitada = (valor: string) => {
+    const somenteNumeros = valor.replace(/\D/g, "").slice(0, 8);
+    if (somenteNumeros.length <= 2) {
+      return somenteNumeros;
+    }
+    if (somenteNumeros.length <= 4) {
+      return `${somenteNumeros.slice(0, 2)}/${somenteNumeros.slice(2)}`;
+    }
+    return `${somenteNumeros.slice(0, 2)}/${somenteNumeros.slice(2, 4)}/${somenteNumeros.slice(4)}`;
+  };
 
   const formatarDataParaISO = (valor) => {
     if (!valor) {
@@ -82,11 +125,41 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
     return null;
   };
 
+  const obterMensagemErro = (erro: unknown) => {
+    if (axios.isAxiosError(erro)) {
+      const data = erro.response?.data;
+      if (typeof data === "string") {
+        return data;
+      }
+      if (data?.erro) {
+        return data.erro;
+      }
+      if (data?.message) {
+        return data.message;
+      }
+      if (erro.response?.status) {
+        return `Erro ${erro.response.status}`;
+      }
+    }
+
+    return "Não foi possível cadastrar o medicamento.";
+  };
+
   const handleCancelar = () => {
     navigation.goBack();
   };
 
   const handleConfirmar = async () => {
+    if (!API_URL) {
+      Alert.alert("Erro", "API não configurada.");
+      return;
+    }
+
+    if (!selectedPet?.codigo_pet) {
+      Alert.alert("Atenção", "Selecione o pet.");
+      return;
+    }
+
     if (!nomeMedicamento.trim()) {
       Alert.alert("Atenção", "Informe o nome do medicamento.");
       return;
@@ -99,11 +172,6 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
 
     if (!frequencia) {
       Alert.alert("Atenção", "Selecione a frequência.");
-      return;
-    }
-
-    if (!selectedPet?.codigo_pet) {
-      Alert.alert("Atenção", "Pet não identificado. Volte e tente novamente.");
       return;
     }
 
@@ -132,8 +200,16 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
       Alert.alert("Sucesso", "Medicamento cadastrado com sucesso!");
       navigation.goBack();
     } catch (erro) {
-      console.error("Erro ao cadastrar medicamento:", erro);
-      Alert.alert("Erro", "Não foi possível cadastrar o medicamento.");
+      const mensagem = obterMensagemErro(erro);
+      if (axios.isAxiosError(erro)) {
+        console.error("Erro ao cadastrar medicamento:", {
+          status: erro.response?.status,
+          data: erro.response?.data,
+        });
+      } else {
+        console.error("Erro ao cadastrar medicamento:", erro);
+      }
+      Alert.alert("Erro", mensagem);
     } finally {
       setSalvando(false);
     }
@@ -153,6 +229,57 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.fieldContainer}>
+          <Text style={styles.fieldLabel}>
+            Pet <Text style={styles.requiredMarker}>*</Text>
+          </Text>
+          <Pressable
+            style={styles.inputRow}
+            onPress={() => {
+              setShowPetOptions((prev) => !prev);
+              setShowClassificacaoOptions(false);
+              setShowFrequenciaOptions(false);
+            }}
+          >
+            <Text
+              style={[
+                styles.dropdownText,
+                !selectedPet && styles.dropdownPlaceholder,
+              ]}
+            >
+              {selectedPet ? selectedPet.nome : "Selecione o pet"}
+            </Text>
+            <Text style={styles.inputIcon}>▾</Text>
+          </Pressable>
+          {showPetOptions && (
+            <View style={styles.dropdownMenu}>
+              {pets.length === 0 ? (
+                <View style={styles.dropdownOption}>
+                  <Text style={styles.emptyOptionText}>
+                    Nenhum pet encontrado
+                  </Text>
+                </View>
+              ) : (
+                pets.map((pet) => (
+                  <Pressable
+                    key={pet.codigo_pet}
+                    style={styles.dropdownOption}
+                    onPress={() => {
+                      setSelectedPet(pet);
+                      setShowPetOptions(false);
+                    }}
+                  >
+                    <Text style={styles.dropdownOptionText}>{pet.nome}</Text>
+                  </Pressable>
+                ))
+              )}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.fieldContainer}>
+          <Text style={styles.fieldLabel}>
+            Nome do medicamento <Text style={styles.requiredMarker}>*</Text>
+          </Text>
           <TextInput
             style={styles.input}
             placeholder="Nome do medicamento"
@@ -163,11 +290,15 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
         </View>
 
         <View style={styles.fieldContainer}>
+          <Text style={styles.fieldLabel}>
+            Classificação <Text style={styles.requiredMarker}>*</Text>
+          </Text>
           <Pressable
             style={styles.inputRow}
             onPress={() => {
               setShowClassificacaoOptions((prev) => !prev);
               setShowFrequenciaOptions(false);
+              setShowPetOptions(false);
             }}
           >
             <Text
@@ -176,7 +307,7 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
                 !classificacao && styles.dropdownPlaceholder,
               ]}
             >
-              {classificacao || "Classificação"}
+              {classificacao || "Selecione a classificação"}
             </Text>
             <Text style={styles.inputIcon}>▾</Text>
           </Pressable>
@@ -199,19 +330,23 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
         </View>
 
         <View style={styles.fieldContainer}>
+          <Text style={styles.fieldLabel}>Data de validade</Text>
           <View style={[styles.inputRow, styles.inputDate]}>
             <Text style={styles.inputIconLeft}>📅</Text>
             <TextInput
               style={styles.inputField}
-              placeholder="Data de validade"
+              placeholder="DD/MM/AAAA"
               placeholderTextColor="rgba(212, 233, 255, 0.7)"
               value={dataValidade}
-              onChangeText={setDataValidade}
+              onChangeText={(text) => setDataValidade(formatarDataDigitada(text))}
+              keyboardType="numeric"
+              maxLength={10}
             />
           </View>
         </View>
 
         <View style={styles.fieldContainer}>
+          <Text style={styles.fieldLabel}>Dosagem</Text>
           <TextInput
             style={styles.input}
             placeholder="Dosagem"
@@ -222,11 +357,15 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
         </View>
 
         <View style={styles.fieldContainer}>
+          <Text style={styles.fieldLabel}>
+            Frequência <Text style={styles.requiredMarker}>*</Text>
+          </Text>
           <Pressable
             style={styles.inputRow}
             onPress={() => {
               setShowFrequenciaOptions((prev) => !prev);
               setShowClassificacaoOptions(false);
+              setShowPetOptions(false);
             }}
           >
             <Text
@@ -235,7 +374,7 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
                 !frequencia && styles.dropdownPlaceholder,
               ]}
             >
-              {frequencia || "Frequência"}
+              {frequencia || "Selecione a frequência"}
             </Text>
             <Text style={styles.inputIcon}>▾</Text>
           </Pressable>
@@ -258,27 +397,33 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
         </View>
 
         <View style={styles.fieldContainer}>
+          <Text style={styles.fieldLabel}>Data de início</Text>
           <View style={[styles.inputRow, styles.inputDate]}>
             <Text style={styles.inputIconLeft}>📅</Text>
             <TextInput
               style={styles.inputField}
-              placeholder="Data de início"
+              placeholder="DD/MM/AAAA"
               placeholderTextColor="rgba(212, 233, 255, 0.7)"
               value={dataInicio}
-              onChangeText={setDataInicio}
+              onChangeText={(text) => setDataInicio(formatarDataDigitada(text))}
+              keyboardType="numeric"
+              maxLength={10}
             />
           </View>
         </View>
 
         <View style={styles.fieldContainer}>
+          <Text style={styles.fieldLabel}>Data de fim</Text>
           <View style={[styles.inputRow, styles.inputDate]}>
             <Text style={styles.inputIconLeft}>📅</Text>
             <TextInput
               style={styles.inputField}
-              placeholder="Data de fim"
+              placeholder="DD/MM/AAAA"
               placeholderTextColor="rgba(212, 233, 255, 0.7)"
               value={dataFim}
-              onChangeText={setDataFim}
+              onChangeText={(text) => setDataFim(formatarDataDigitada(text))}
+              keyboardType="numeric"
+              maxLength={10}
             />
           </View>
         </View>
@@ -340,6 +485,15 @@ const styles = StyleSheet.create({
   fieldContainer: {
     marginBottom: 16,
   },
+  fieldLabel: {
+    fontFamily: "MuseoModerno-Regular",
+    fontSize: 14,
+    color: "#D4E9FF",
+    marginBottom: 8,
+  },
+  requiredMarker: {
+    color: "#F6B1B1",
+  },
   input: {
     borderWidth: 2,
     borderColor: "#D4E9FF",
@@ -390,6 +544,11 @@ const styles = StyleSheet.create({
   },
   dropdownOptionText: {
     color: "#D4E9FF",
+    fontFamily: "MuseoModerno-Regular",
+    fontSize: 14,
+  },
+  emptyOptionText: {
+    color: "rgba(212, 233, 255, 0.7)",
     fontFamily: "MuseoModerno-Regular",
     fontSize: 14,
   },

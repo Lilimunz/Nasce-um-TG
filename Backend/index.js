@@ -12,7 +12,8 @@ const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     database: process.env.DB_DATABASE,
-    password: process.env.DB_PASSWORD
+    password: process.env.DB_PASSWORD,
+    charset: 'utf8mb4'
 })
 
 connection.connect((err) => {
@@ -20,6 +21,11 @@ connection.connect((err) => {
         console.error('Erro ao conectar ao banco de dados:', err.stack)
         return
     }
+    connection.query("SET NAMES utf8mb4", (setErr) => {
+        if (setErr) {
+            console.error('Erro ao configurar charset utf8mb4:', setErr)
+        }
+    })
     console.log('Conexão bem-sucedida ao banco de dados com o ID: ', connection.threadId)
 })
 
@@ -97,20 +103,75 @@ app.put('/tutor/:id', async (req, res) => {
 })
 
 
-app.delete('/tutor/:id', (req, res) => {
-    // Pega o ID que vem na URL
-    const id = req.params.id
-    const deleteQuery = 'DELETE FROM tb_tutor WHERE codigo_tutor = ?'
-    connection.query(deleteQuery, [id], (err, results) => {
-        if (err) {
-            return res.json("Erro ao deletar tutor")
+app.delete('/tutor/:id', async (req, res) => {
+    const codigoTutor = Number(req.params.id)
+
+    if (!Number.isInteger(codigoTutor)) {
+        return res.json({ erro: "codigo_tutor invalido" })
+    }
+
+    const conn = connection.promise()
+    try {
+        await conn.beginTransaction()
+
+        const [petsRows] = await conn.query(
+            'SELECT codigo_pet FROM tb_pet WHERE codigo_tutor = ?',
+            [codigoTutor]
+        )
+        const petIds = petsRows.map((row) => row.codigo_pet)
+
+        if (petIds.length > 0) {
+            const placeholders = petIds.map(() => '?').join(',')
+
+            await conn.query(
+                `DELETE FROM tb_vacina WHERE codigo_pet IN (${placeholders})`,
+                petIds
+            )
+
+            const [medRows] = await conn.query(
+                `SELECT DISTINCT codigo_medicamento FROM tb_pet_medicamento WHERE codigo_pet IN (${placeholders})`,
+                petIds
+            )
+            const medIds = medRows.map((row) => row.codigo_medicamento)
+
+            await conn.query(
+                `DELETE FROM tb_pet_medicamento WHERE codigo_pet IN (${placeholders})`,
+                petIds
+            )
+            await conn.query('DELETE FROM tb_pet WHERE codigo_tutor = ?', [codigoTutor])
+
+            if (medIds.length > 0) {
+                const medPlaceholders = medIds.map(() => '?').join(',')
+                await conn.query(
+                    `DELETE FROM tb_medicamento WHERE codigo_medicamento IN (${medPlaceholders})`,
+                    medIds
+                )
+            }
+        } else {
+            await conn.query('DELETE FROM tb_pet WHERE codigo_tutor = ?', [codigoTutor])
         }
-        // Verifica se o ID existe no banco antes de deletar
-        if (results.affectedRows === 0) {
-            return res.json("Tutor não encontrado")
+
+        const [result] = await conn.query(
+            'DELETE FROM tb_tutor WHERE codigo_tutor = ?',
+            [codigoTutor]
+        )
+
+        if (result.affectedRows === 0) {
+            await conn.rollback()
+            return res.json({ erro: "Tutor nao encontrado" })
         }
-        res.json("Tutor deletado com sucesso!")
-    })
+
+        await conn.commit()
+        res.json({ mensagem: "Tutor deletado com sucesso!" })
+    } catch (erro) {
+        try {
+            await conn.rollback()
+        } catch (rollbackError) {
+            console.error('Erro ao fazer rollback:', rollbackError)
+        }
+        console.error('Erro ao deletar tutor:', erro)
+        res.json({ erro: "Erro ao deletar tutor" })
+    }
 })
 
 app.get('/usuario/:email', (req, res) => {
@@ -125,6 +186,57 @@ app.get('/usuario/:email', (req, res) => {
         }
         res.json(results[0])
     })
+})
+
+app.get('/tutor/:id', async (req, res) => {
+    try {
+        const codigo_tutor = Number(req.params.id)
+        if (!Number.isInteger(codigo_tutor)) {
+            return res.json({ erro: "codigo_tutor invalido" })
+        }
+
+        const query = 'SELECT codigo_tutor, nome, email FROM tb_tutor WHERE codigo_tutor = ?'
+        const [rows] = await connection.promise().query(query, [codigo_tutor])
+
+        if (rows.length === 0) {
+            return res.json({ erro: "Tutor nao encontrado" })
+        }
+
+        res.json(rows[0])
+    } catch (erro) {
+        console.error('Erro ao buscar tutor:', erro)
+        res.json({ erro: "Erro ao buscar tutor" })
+    }
+})
+
+app.get('/tutor/:codigo_tutor/perfil', async (req, res) => {
+    try {
+        const codigo_tutor = req.params.codigo_tutor;
+        
+        // Buscar dados do tutor
+        const [tutorRows] = await connection.promise().query(
+            'SELECT codigo_tutor, nome, email FROM tb_tutor WHERE codigo_tutor = ?',
+            [codigo_tutor]
+        );
+        
+        if (tutorRows.length === 0) {
+            return res.json({ erro: "Tutor não encontrado" });
+        }
+        
+        // Buscar pets do tutor
+        const [petsRows] = await connection.promise().query(
+            'SELECT * FROM tb_pet WHERE codigo_tutor = ?',
+            [codigo_tutor]
+        );
+        
+        res.json({
+            tutor: tutorRows[0],
+            pets: petsRows
+        });
+    } catch (erro) {
+        console.error('Erro ao buscar perfil:', erro);
+        res.json({ erro: "Erro ao buscar perfil do tutor" });
+    }
 })
 
 
@@ -154,6 +266,202 @@ app.get('/pets/:codigo_tutor', async (req, res) => {
     } catch (erro) {
         console.error('Erro ao buscar pets:', erro);
         res.json({ error: "Erro interno ao buscar os pets." });
+    }
+});
+
+app.get('/pet/:codigo_pet', async (req, res) => {
+    try {
+        const codigo_pet = req.params.codigo_pet;
+        const selectQuery = 'SELECT * FROM tb_pet WHERE codigo_pet = ?';
+        const [rows] = await connection.promise().query(selectQuery, [codigo_pet]);
+        
+        if (rows.length === 0) {
+            return res.json({ erro: "Pet não encontrado" });
+        }
+        
+        res.json(rows[0]);
+    } catch (erro) {
+        console.error('Erro ao buscar pet:', erro);
+        res.json({ erro: "Erro ao buscar pet" });
+    }
+});
+
+app.put('/pet/:codigo_pet', async (req, res) => {
+    try {
+        const codigoPet = Number(req.params.codigo_pet);
+        const {
+            nome,
+            idade,
+            especie,
+            peso,
+            data_nascimento,
+            porte,
+            raca,
+            condicao_especial,
+            quantidade_racao,
+        } = req.body;
+
+        if (!Number.isInteger(codigoPet)) {
+            return res.json({ erro: "codigo_pet invalido" });
+        }
+
+        if (!nome || !especie) {
+            return res.json({ erro: "nome e especie sao obrigatorios" });
+        }
+
+        const updateQuery = `
+            UPDATE tb_pet
+            SET nome = ?,
+                idade = ?,
+                especie = ?,
+                peso = ?,
+                data_nascimento = ?,
+                porte = ?,
+                raca = ?,
+                condicao_especial = ?,
+                quantidade_racao = ?
+            WHERE codigo_pet = ?
+        `;
+
+        const [result] = await connection.promise().query(updateQuery, [
+            nome,
+            idade ?? null,
+            especie,
+            peso ?? null,
+            data_nascimento ?? null,
+            porte ?? null,
+            raca ?? null,
+            condicao_especial ?? null,
+            quantidade_racao ?? null,
+            codigoPet,
+        ]);
+
+        if (result.affectedRows === 0) {
+            return res.json({ erro: "Pet nao encontrado" });
+        }
+
+        res.json({ mensagem: "Pet atualizado com sucesso!" });
+    } catch (erro) {
+        console.error('Erro ao atualizar pet:', erro);
+        res.json({ erro: "Erro ao atualizar pet" });
+    }
+});
+
+app.get('/pet/:codigo_pet/vacinas', async (req, res) => {
+    try {
+        const codigo_pet = req.params.codigo_pet;
+        const selectQuery = `
+            SELECT codigo_vacina, nome, tipo, data_aplicacao
+            FROM tb_vacina
+            WHERE codigo_pet = ?
+            ORDER BY data_aplicacao DESC
+        `;
+        const [rows] = await connection.promise().query(selectQuery, [codigo_pet]);
+
+        res.json(rows);
+    } catch (erro) {
+        console.error('Erro ao buscar vacinas:', erro);
+        res.json({ erro: "Erro ao buscar vacinas" });
+    }
+});
+
+app.delete('/pet/:codigo_pet', async (req, res) => {
+    const codigo_pet = req.params.codigo_pet;
+    const codigoPet = Number(codigo_pet);
+
+    if (!Number.isInteger(codigoPet)) {
+        return res.json({ erro: "codigo_pet invalido" });
+    }
+
+    const conn = connection.promise();
+    try {
+        await conn.beginTransaction();
+
+        await conn.query('DELETE FROM tb_vacina WHERE codigo_pet = ?', [codigoPet]);
+        await conn.query('DELETE FROM tb_pet_medicamento WHERE codigo_pet = ?', [codigoPet]);
+
+        const [result] = await conn.query('DELETE FROM tb_pet WHERE codigo_pet = ?', [codigoPet]);
+        if (result.affectedRows === 0) {
+            await conn.rollback();
+            return res.json({ erro: "Pet nao encontrado" });
+        }
+
+        await conn.commit();
+        res.json({ mensagem: "Pet excluido com sucesso!" });
+    } catch (erro) {
+        try {
+            await conn.rollback();
+        } catch (rollbackError) {
+            console.error('Erro ao fazer rollback:', rollbackError);
+        }
+        console.error('Erro ao excluir pet:', erro);
+        res.json({ erro: "Erro ao excluir pet" });
+    }
+});
+
+app.post('/vacina', async (req, res) => {
+    try {
+        const { codigo_pet, nome, tipo, data_aplicacao } = req.body;
+        
+        if (!codigo_pet || !nome || !tipo || !data_aplicacao) {
+            return res.json({ erro: "Todos os campos são obrigatórios" });
+        }
+        
+        const insertQuery = 'INSERT INTO tb_vacina (codigo_pet, nome, tipo, data_aplicacao) VALUES (?, ?, ?, ?)';
+        await connection.promise().query(insertQuery, [codigo_pet, nome, tipo, data_aplicacao]);
+        
+        res.json({ mensagem: "Vacina cadastrada com sucesso!" });
+    } catch (erro) {
+        console.error('Erro ao cadastrar vacina:', erro);
+        res.json({ erro: "Erro ao cadastrar vacina" });
+    }
+});
+
+app.post('/medicamento', async (req, res) => {
+    const { codigo_pet, nome, classificacao, validade, dosagem, frequencia } = req.body;
+
+    if (!codigo_pet || !nome) {
+        return res.json({ erro: "codigo_pet e nome sao obrigatorios" });
+    }
+
+    const codigoPet = Number(codigo_pet);
+    if (!Number.isInteger(codigoPet)) {
+        return res.json({ erro: "codigo_pet invalido" });
+    }
+
+    const conn = connection.promise();
+    try {
+        await conn.beginTransaction();
+
+        const insertMedicamento =
+            'INSERT INTO tb_medicamento (nome, classificacao, validade) VALUES (?, ?, ?)';
+        const [medResult] = await conn.query(insertMedicamento, [
+            nome,
+            classificacao || null,
+            validade || null,
+        ]);
+
+        const codigo_medicamento = medResult.insertId;
+
+        const insertPetMedicamento =
+            'INSERT INTO tb_pet_medicamento (codigo_pet, codigo_medicamento, dosagem, frequencia) VALUES (?, ?, ?, ?)';
+        await conn.query(insertPetMedicamento, [
+            codigoPet,
+            codigo_medicamento,
+            dosagem || null,
+            frequencia || null,
+        ]);
+
+        await conn.commit();
+        res.json({ mensagem: "Medicamento cadastrado com sucesso!", codigo_medicamento });
+    } catch (erro) {
+        try {
+            await conn.rollback();
+        } catch (rollbackError) {
+            console.error('Erro ao fazer rollback:', rollbackError);
+        }
+        console.error('Erro ao cadastrar medicamento:', erro);
+        res.json({ erro: "Erro ao cadastrar medicamento" });
     }
 });
 

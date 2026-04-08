@@ -7,8 +7,15 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import PginaDeLogIn from "./src/screens/PginaDeLogIn";
 import PginaDeCadastro from "./src/screens/PginaDeCadastro";
-import { PaginaPrincipal } from './src/screens/PginaPrincipal';
+import { PginaPrincipal } from './src/screens/PginaPrincipal';
 import PginaDeCadia from "./src/screens/PginaDeCadia";
+import PetProfile from "./src/screens/PetProfile";
+import PginaDeCadastroDeVacina from "./src/screens/PginaDeCadastroDeVacina";
+import PginaDeCadastroDeMedicamento from "./src/screens/PginaDeCadastroDeMedicamento";
+import PginaDeEditarPet from "./src/screens/PginaDeEditarPet";
+import PginaDeConfiguracaoTutor from "./src/screens/PginaDeConfiguracaoTutor";
+import PginaDeEditarTutor from "./src/screens/PginaDeEditarTutor";
+
 
 const Stack = createStackNavigator()
 
@@ -32,10 +39,16 @@ export default function App() {
           initialRouteName="Login"
           screenOptions={{ headerShown: false }}
         >
+          <Stack.Screen name="Home" component={PginaPrincipal} />
+          <Stack.Screen name="PetProfile" component={PetProfile} />
+          <Stack.Screen name="EditarPet" component={PginaDeEditarPet} />
+          <Stack.Screen name="ConfiguracaoTutor" component={PginaDeConfiguracaoTutor} />
+          <Stack.Screen name="EditarTutor" component={PginaDeEditarTutor} />
+          <Stack.Screen name="CadastroVacina" component={PginaDeCadastroDeVacina} />
+          <Stack.Screen name="CadastroMedicamento" component={PginaDeCadastroDeMedicamento} />
           <Stack.Screen name="Login" component={PginaDeLogIn} />
           <Stack.Screen name="Cadastro" component={PginaDeCadia} />
           <Stack.Screen name="CadastroPrincipal" component={PginaDeCadastro} />
-          <Stack.Screen name="Home" component={PaginaPrincipal} />
         </Stack.Navigator>
       </NavigationContainer>
       <StatusBar style="light" />

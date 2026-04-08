@@ -113,7 +113,9 @@ app.delete('/tutor/:id', async (req, res) => {
         return res.json({ erro: "codigo_tutor invalido" })
     }
 
-    const conn = connection.promise()
+    // PEGA UMA CONEXÃO EMPRESTADA DO POOL
+    const conn = await connection.promise().getConnection();
+    
     try {
         await conn.beginTransaction()
 
@@ -161,10 +163,12 @@ app.delete('/tutor/:id', async (req, res) => {
 
         if (result.affectedRows === 0) {
             await conn.rollback()
+            conn.release() // DEVOLVE
             return res.json({ erro: "Tutor nao encontrado" })
         }
 
         await conn.commit()
+        conn.release() // DEVOLVE
         res.json({ mensagem: "Tutor deletado com sucesso!" })
     } catch (erro) {
         try {
@@ -172,6 +176,7 @@ app.delete('/tutor/:id', async (req, res) => {
         } catch (rollbackError) {
             console.error('Erro ao fazer rollback:', rollbackError)
         }
+        conn.release() // DEVOLVE
         console.error('Erro ao deletar tutor:', erro)
         res.json({ erro: "Erro ao deletar tutor" })
     }
@@ -376,7 +381,9 @@ app.delete('/pet/:codigo_pet', async (req, res) => {
         return res.json({ erro: "codigo_pet invalido" });
     }
 
-    const conn = connection.promise();
+    // PEGA UMA CONEXÃO EMPRESTADA DO POOL
+    const conn = await connection.promise().getConnection(); 
+    
     try {
         await conn.beginTransaction();
 
@@ -386,10 +393,12 @@ app.delete('/pet/:codigo_pet', async (req, res) => {
         const [result] = await conn.query('DELETE FROM tb_pet WHERE codigo_pet = ?', [codigoPet]);
         if (result.affectedRows === 0) {
             await conn.rollback();
+            conn.release(); // DEVOLVE PRO POOL
             return res.json({ erro: "Pet nao encontrado" });
         }
 
         await conn.commit();
+        conn.release(); // DEVOLVE PRO POOL NO SUCESSO
         res.json({ mensagem: "Pet excluido com sucesso!" });
     } catch (erro) {
         try {
@@ -397,6 +406,7 @@ app.delete('/pet/:codigo_pet', async (req, res) => {
         } catch (rollbackError) {
             console.error('Erro ao fazer rollback:', rollbackError);
         }
+        conn.release(); // DEVOLVE PRO POOL NO ERRO
         console.error('Erro ao excluir pet:', erro);
         res.json({ erro: "Erro ao excluir pet" });
     }
@@ -432,7 +442,9 @@ app.post('/medicamento', async (req, res) => {
         return res.json({ erro: "codigo_pet invalido" });
     }
 
-    const conn = connection.promise();
+    // PEGA UMA CONEXÃO EMPRESTADA DO POOL
+    const conn = await connection.promise().getConnection();
+    
     try {
         await conn.beginTransaction();
 
@@ -456,6 +468,7 @@ app.post('/medicamento', async (req, res) => {
         ]);
 
         await conn.commit();
+        conn.release(); // DEVOLVE PRO POOL
         res.json({ mensagem: "Medicamento cadastrado com sucesso!", codigo_medicamento });
     } catch (erro) {
         try {
@@ -463,6 +476,7 @@ app.post('/medicamento', async (req, res) => {
         } catch (rollbackError) {
             console.error('Erro ao fazer rollback:', rollbackError);
         }
+        conn.release(); // DEVOLVE PRO POOL
         console.error('Erro ao cadastrar medicamento:', erro);
         res.json({ erro: "Erro ao cadastrar medicamento" });
     }

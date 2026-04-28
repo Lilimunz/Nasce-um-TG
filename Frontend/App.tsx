@@ -15,6 +15,7 @@ import PginaDeCadastroDeMedicamento from "./src/screens/PginaDeCadastroDeMedicam
 import PginaDeEditarPet from "./src/screens/PginaDeEditarPet";
 import PginaDeConfiguracaoTutor from "./src/screens/PginaDeConfiguracaoTutor";
 import PginaDeEditarTutor from "./src/screens/PginaDeEditarTutor";
+import TelaDeAlimentos from "./src/screens/TelaDeAlimentos";
 
 
 const Stack = createStackNavigator()
@@ -49,6 +50,7 @@ export default function App() {
           <Stack.Screen name="Login" component={PginaDeLogIn} />
           <Stack.Screen name="Cadastro" component={PginaDeCadia} />
           <Stack.Screen name="CadastroPrincipal" component={PginaDeCadastro} />
+          <Stack.Screen name="Alimentos" component={TelaDeAlimentos} />
         </Stack.Navigator>
       </NavigationContainer>
       <StatusBar style="light" />

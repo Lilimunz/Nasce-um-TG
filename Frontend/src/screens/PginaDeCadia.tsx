@@ -279,10 +279,13 @@ const PginaDeCadia = ({ navigation }) => {
                 <Pressable style={styles.navItem}>
                     <Image source={Localizacao} style={styles.navIcon} />
                 </Pressable>
-                <Pressable style={styles.navItem}>
+                <Pressable style={[styles.navItem, styles.navItemActive]}>
                     <Image source={Patinha} style={styles.navIcon} />
                 </Pressable>
-                <Pressable style={styles.navItem}>
+                <Pressable
+                    style={styles.navItem}
+                    onPress={() => navigation.navigate("Alimentos")}
+                >
                     <Image source={Racao} style={styles.navIcon} />
                 </Pressable>
                 <Pressable
@@ -452,6 +455,11 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingVertical: 8,
         paddingHorizontal: 12,
+    },
+    navItemActive: {
+        borderTopWidth: 3,
+        borderTopColor: "#344759",
+        marginTop: -3,
     },
     navIcon: {
         width: 28,

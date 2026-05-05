@@ -132,7 +132,6 @@ export function PginaPrincipal({ navigation }) {
                         <Text style={styles.adicionarPetLabel}>Adicionar pet</Text>
                         <Text style={styles.adicionarPetSub}>Cadastre um novo pet</Text>
                     </View>
-                    <Text style={styles.adicionarPetChevron}>{'>'}</Text>
                 </TouchableOpacity>
             </ScrollView>
 

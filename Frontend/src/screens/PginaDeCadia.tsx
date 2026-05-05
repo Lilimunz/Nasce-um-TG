@@ -130,9 +130,9 @@ const PginaDeCadia = ({ navigation }) => {
             {/* Header */}
             <View style={styles.header}>
                 <Pressable onPress={() => navigation.goBack()}>
-                    <Text style={styles.voltarText}>{"< Voltar"}</Text>
+                    <Text style={styles.voltarText}>{"Voltar"}</Text>
                 </Pressable>
-                <Text style={styles.headerTitle}>🐾 Cadastrar Pet</Text>
+                <Text style={styles.headerTitle}>Cadastrar Pet</Text>
             </View>
 
             {/* Abas */}
@@ -176,7 +176,7 @@ const PginaDeCadia = ({ navigation }) => {
                                 <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
                             ) : (
                                 <View style={styles.emptyCircle}>
-                                    <Text style={styles.emptyCircleIcon}>📷</Text>
+                                    <Text style={styles.emptyCircleIcon}></Text>
                                 </View>
                             )}
                         </View>
@@ -197,7 +197,7 @@ const PginaDeCadia = ({ navigation }) => {
                             value={nome}
                             onChangeText={setNome}
                             placeholder="Nome do pet"
-                            placeholderTextColor="rgba(212,233,255,0.3)"
+                            placeholderTextColor="#d4e9ff4d"
                         />
 
                         <Text style={styles.label}>Espécie *</Text>
@@ -409,13 +409,13 @@ const styles = StyleSheet.create({
         textAlign: "center",
     },
     label: {
-        color: "rgba(212, 233, 255, 0.6)",
+        color: "#D4E9FF",
         fontSize: 12,
         marginBottom: 5,
         marginTop: 15,
     },
     input: {
-        backgroundColor: "rgba(51, 102, 153, 0.15)",
+        backgroundColor: "#33669926",
         borderWidth: 1,
         borderColor: "rgba(212, 233, 255, 0.12)",
         color: "#D4E9FF",

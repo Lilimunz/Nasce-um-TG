@@ -24,7 +24,7 @@ const PginaDeLogIn = ({ navigation }) => {
 
         if (idSalvo !== null) {
           // Se o ID existe, o usuário já está logado! Pula pra tela principal.
-          navigation.replace("PginaPrincipal", { tutorId: idSalvo });
+          navigation.replace("Home", { tutorId: idSalvo });
         }
       } catch (error) {
         console.error("Erro ao ler a sessão", error);

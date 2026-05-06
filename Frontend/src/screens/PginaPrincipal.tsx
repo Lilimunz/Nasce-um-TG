@@ -140,7 +140,10 @@ export function PginaPrincipal({ navigation }) {
                 <TouchableOpacity style={styles.navItem}>
                     <Image source={Calendario} style={styles.navIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
+                <TouchableOpacity
+                    style={styles.navItem}
+                    onPress={() => navigation.navigate("Hospitais")}
+                >
                     <Image source={Localizacao} style={styles.navIcon} />
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>

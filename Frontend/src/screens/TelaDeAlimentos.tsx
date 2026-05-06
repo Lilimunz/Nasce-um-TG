@@ -159,7 +159,7 @@ const TelaDeAlimentos = ({ navigation }) => {
         </Pressable>
         <Pressable
           style={styles.navItem}
-          onPress={() => navigation.navigate("Home")}
+          onPress={() => navigation.navigate("Hospitais")}
         >
           <Image source={Localizacao} style={styles.navIcon} />
         </Pressable>

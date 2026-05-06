@@ -276,7 +276,10 @@ const PginaDeCadia = ({ navigation }) => {
                 <Pressable style={styles.navItem}>
                     <Image source={Calendario} style={styles.navIcon} />
                 </Pressable>
-                <Pressable style={styles.navItem}>
+                <Pressable
+                    style={styles.navItem}
+                    onPress={() => navigation.navigate("Hospitais")}
+                >
                     <Image source={Localizacao} style={styles.navIcon} />
                 </Pressable>
                 <Pressable style={[styles.navItem, styles.navItemActive]}>

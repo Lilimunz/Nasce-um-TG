@@ -1,12 +1,15 @@
 require('dotenv').config()
 
 const bcrypt = require('bcrypt')
+const { Client } = require("@googlemaps/google-maps-services-js");
 const cors = require('cors')
 const express = require('express')
 const mysql = require('mysql2')
 const app = express()
 app.use(express.json())
 app.use(cors())
+
+const googleMapsClient = new Client({});
 
 const connection = mysql.createPool({
     host: process.env.DB_HOST,
@@ -115,7 +118,7 @@ app.delete('/tutor/:id', async (req, res) => {
 
     // PEGA UMA CONEXÃO EMPRESTADA DO POOL
     const conn = await connection.promise().getConnection();
-    
+
     try {
         await conn.beginTransaction()
 
@@ -220,23 +223,23 @@ app.get('/tutor/:id', async (req, res) => {
 app.get('/tutor/:codigo_tutor/perfil', async (req, res) => {
     try {
         const codigo_tutor = req.params.codigo_tutor;
-        
+
         // Buscar dados do tutor
         const [tutorRows] = await connection.promise().query(
             'SELECT codigo_tutor, nome, email FROM tb_tutor WHERE codigo_tutor = ?',
             [codigo_tutor]
         );
-        
+
         if (tutorRows.length === 0) {
             return res.json({ erro: "Tutor não encontrado" });
         }
-        
+
         // Buscar pets do tutor
         const [petsRows] = await connection.promise().query(
             'SELECT * FROM tb_pet WHERE codigo_tutor = ?',
             [codigo_tutor]
         );
-        
+
         res.json({
             tutor: tutorRows[0],
             pets: petsRows
@@ -282,11 +285,11 @@ app.get('/pet/:codigo_pet', async (req, res) => {
         const codigo_pet = req.params.codigo_pet;
         const selectQuery = 'SELECT * FROM tb_pet WHERE codigo_pet = ?';
         const [rows] = await connection.promise().query(selectQuery, [codigo_pet]);
-        
+
         if (rows.length === 0) {
             return res.json({ erro: "Pet não encontrado" });
         }
-        
+
         res.json(rows[0]);
     } catch (erro) {
         console.error('Erro ao buscar pet:', erro);
@@ -382,8 +385,8 @@ app.delete('/pet/:codigo_pet', async (req, res) => {
     }
 
     // PEGA UMA CONEXÃO EMPRESTADA DO POOL
-    const conn = await connection.promise().getConnection(); 
-    
+    const conn = await connection.promise().getConnection();
+
     try {
         await conn.beginTransaction();
 
@@ -415,14 +418,14 @@ app.delete('/pet/:codigo_pet', async (req, res) => {
 app.post('/vacina', async (req, res) => {
     try {
         const { codigo_pet, nome, tipo, data_aplicacao } = req.body;
-        
+
         if (!codigo_pet || !nome || !tipo || !data_aplicacao) {
             return res.json({ erro: "Todos os campos são obrigatórios" });
         }
-        
+
         const insertQuery = 'INSERT INTO tb_vacina (codigo_pet, nome, tipo, data_aplicacao) VALUES (?, ?, ?, ?)';
         await connection.promise().query(insertQuery, [codigo_pet, nome, tipo, data_aplicacao]);
-        
+
         res.json({ mensagem: "Vacina cadastrada com sucesso!" });
     } catch (erro) {
         console.error('Erro ao cadastrar vacina:', erro);
@@ -444,7 +447,7 @@ app.post('/medicamento', async (req, res) => {
 
     // PEGA UMA CONEXÃO EMPRESTADA DO POOL
     const conn = await connection.promise().getConnection();
-    
+
     try {
         await conn.beginTransaction();
 
@@ -479,6 +482,49 @@ app.post('/medicamento', async (req, res) => {
         conn.release(); // DEVOLVE PRO POOL
         console.error('Erro ao cadastrar medicamento:', erro);
         res.json({ erro: "Erro ao cadastrar medicamento" });
+    }
+});
+app.get('/hospitais', async (req, res) => {
+    try {
+        const lat = parseFloat(req.query.lat)
+        const lng = parseFloat(req.query.lng)
+
+        if (!lat || !lng) {
+            return res.json({ error: "Latitude e longitude são obrigatórias." })
+        }
+
+        const response = await googleMapsClient.placesNearby({
+            params: {
+                location: { lat: lat, lng: lng },
+                radius: 10000,
+                type: 'veterinary_care',
+                keyword: ['hospital veterinario', 'Clínica veterinária', 'Hospital Veterinário 24 Horas', 'Pet Hospital'],
+                key: process.env.GOOGLE_MAPS_API_KEY
+            }
+        })
+
+        res.json(response.data.results)
+
+    } catch (erro) {
+        console.error('Erro ao buscar hospitais no Google Maps:', erro)
+        res.json({ error: "Erro interno ao consultar o mapa." })
+    }
+})
+
+app.get('/hospitais/detalhes/:place_id', async (req, res) => {
+    try {
+        const place_id = req.params.place_id;
+        const response = await googleMapsClient.placeDetails({
+            params: {
+                place_id: place_id,
+                fields: ['formatted_phone_number'],
+                key: process.env.GOOGLE_MAPS_API_KEY
+            }
+        });
+        res.json(response.data.result);
+    } catch (erro) {
+        console.error('Erro ao buscar detalhes no Google Maps:', erro);
+        res.json({ error: "Erro interno ao consultar o mapa." });
     }
 });
 

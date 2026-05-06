@@ -118,6 +118,36 @@ const PginaDeConfiguracaoTutor = ({ navigation }) => {
     );
   };
 
+  const handleSairConta = () => {
+    Alert.alert(
+      "Sair",
+      "Tem certeza que deseja deslogar da sua conta?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.multiRemove([
+                "codigoTutor",
+                "nomeUsuario",
+                "emailUsuario",
+                "petsList",
+              ]);
+              navigation.reset({
+                index: 0,
+                routes: [{ name: "Login" }],
+              });
+            } catch (error) {
+              console.error("Erro ao deslogar:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (carregando) {
     return (
       <SafeAreaView style={styles.container}>
@@ -151,6 +181,13 @@ const PginaDeConfiguracaoTutor = ({ navigation }) => {
           onPress={() => navigation.navigate("EditarTutor", { tutorData: tutor })}
         >
           <Text style={styles.editButtonText}>Editar perfil</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.logoutButton}
+          onPress={handleSairConta}
+        >
+          <Text style={styles.logoutButtonText}>Deslogar</Text>
         </Pressable>
 
         <Pressable
@@ -228,6 +265,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   editButtonText: {
+    color: "#D4E9FF",
+    fontFamily: "MuseoModerno-Bold",
+    fontSize: 16,
+  },
+  logoutButton: {
+    backgroundColor: "transparent",
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: "center",
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(212, 233, 255, 0.2)",
+  },
+  logoutButtonText: {
     color: "#D4E9FF",
     fontFamily: "MuseoModerno-Bold",
     fontSize: 16,

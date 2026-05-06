@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 
-const API_URL = process.env.EXPO_PUBLIC_API_MAPS;
+const API_URL = "https://skinning-paragraph-premises.ngrok-free.dev";
 
 // Image assets
 const Calendario = require("../../assets/images/calendario.png");

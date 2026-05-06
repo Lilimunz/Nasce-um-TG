@@ -16,7 +16,8 @@ import PginaDeEditarPet from "./src/screens/PginaDeEditarPet";
 import PginaDeConfiguracaoTutor from "./src/screens/PginaDeConfiguracaoTutor";
 import PginaDeEditarTutor from "./src/screens/PginaDeEditarTutor";
 import TelaDeAlimentos from "./src/screens/TelaDeAlimentos";
-
+import PginaHospitais from "./src/screens/PginaHospitais";
+import PginaHospitalDetalhes from "./src/screens/PginaHospitalDetalhes";
 
 const Stack = createStackNavigator()
 
@@ -41,6 +42,8 @@ export default function App() {
           screenOptions={{ headerShown: false }}
         >
           <Stack.Screen name="Home" component={PginaPrincipal} />
+          <Stack.Screen name="Hospitais" component={PginaHospitais} />
+          <Stack.Screen name="HospitalDetalhes" component={PginaHospitalDetalhes} />
           <Stack.Screen name="PetProfile" component={PetProfile} />
           <Stack.Screen name="EditarPet" component={PginaDeEditarPet} />
           <Stack.Screen name="ConfiguracaoTutor" component={PginaDeConfiguracaoTutor} />

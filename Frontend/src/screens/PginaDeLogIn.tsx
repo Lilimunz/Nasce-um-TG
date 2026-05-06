@@ -15,7 +15,24 @@ const PginaDeLogIn = ({ navigation }) => {
   const [email, setEmail] = React.useState("");
   const [senha, setSenha] = React.useState("");
   const [showSenha, setShowSenha] = React.useState(false);
+  
+  React.useEffect(() => {
+    const verificarSessao = async () => {
+      try {
+        // Tenta achar o ID salvo
+        const idSalvo = await AsyncStorage.getItem('tutorId');
 
+        if (idSalvo !== null) {
+          // Se o ID existe, o usuário já está logado! Pula pra tela principal.
+          navigation.replace("Home", { tutorId: idSalvo });
+        }
+      } catch (error) {
+        console.error("Erro ao ler a sessão", error);
+      }
+    };
+
+    verificarSessao();
+  }, []); // Os colchetes vazios garantem que isso só rode uma vez quando a tela carregar
   const handleLogin = async () => {
     const emailNormalizado = email.trim().toLowerCase();
     const senhaNormalizada = senha;
@@ -87,11 +104,17 @@ const PginaDeLogIn = ({ navigation }) => {
 
       // 5. Se passou por tudo, exibe a mensagem de sucesso!
       Alert.alert("Sucesso!", "Bem-vindo(a) ao Guia Pet!");
+      const idDoTutor = response.data.codigo_tutor ?? response.data.tutor?.codigo_tutor;
+
+      // SALVA O ID NA MEMÓRIA DO CELULAR (Ele só aceita texto, por isso o toString)
+      await AsyncStorage.setItem('tutorId', idDoTutor.toString());
 
       // Limpa os campos
       setEmail("");
       setSenha("");
-      navigation.replace("Home"); // Navega para a tela principal, substituindo a tela de login  
+
+      // Navega para a Home (usei o 'replace' para ele não conseguir voltar pra tela de login arrastando o dedo)
+      navigation.replace("Home", { tutorId: idDoTutor });
     } catch (erro) {
       console.error("Erro no login:", erro);
       Alert.alert("Erro de Conexão", "Não foi possível ligar ao servidor.");

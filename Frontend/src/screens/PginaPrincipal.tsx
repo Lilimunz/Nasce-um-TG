@@ -132,7 +132,6 @@ export function PginaPrincipal({ navigation }) {
                         <Text style={styles.adicionarPetLabel}>Adicionar pet</Text>
                         <Text style={styles.adicionarPetSub}>Cadastre um novo pet</Text>
                     </View>
-                    <Text style={styles.adicionarPetChevron}>{'>'}</Text>
                 </TouchableOpacity>
             </ScrollView>
 
@@ -141,13 +140,19 @@ export function PginaPrincipal({ navigation }) {
                 <TouchableOpacity style={styles.navItem}>
                     <Image source={Calendario} style={styles.navIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
+                <TouchableOpacity
+                    style={styles.navItem}
+                    onPress={() => navigation.navigate("Hospitais")}
+                >
                     <Image source={Localizacao} style={styles.navIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
+                <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>
                     <Image source={Patinha} style={styles.navIcon} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
+                <TouchableOpacity
+                    style={styles.navItem}
+                    onPress={() => navigation.navigate("Alimentos")}
+                >
                     <Image source={Racao} style={styles.navIcon} />
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -293,6 +298,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 8,
         paddingHorizontal: 12,
+    },
+    navItemActive: {
+        borderTopWidth: 3,
+        borderTopColor: '#344759',
+        marginTop: -3,
     },
     navIcon: {
         width: 28,

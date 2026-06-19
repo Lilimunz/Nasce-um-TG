@@ -16,6 +16,7 @@ const connection = mysql.createPool({
     user: process.env.DB_USER,
     database: process.env.DB_DATABASE,
     password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
     charset: 'utf8mb4',
     waitForConnections: true,
     connectionLimit: 10, // Permite até 10 conexões simultâneas

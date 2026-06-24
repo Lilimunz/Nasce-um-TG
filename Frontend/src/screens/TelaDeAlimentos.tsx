@@ -153,19 +153,19 @@ const TelaDeAlimentos = ({ navigation }) => {
       <View style={styles.bottomNav}>
         <Pressable
           style={styles.navItem}
-          onPress={() => navigation.navigate("Home")}
+          onPress={() => navigation.replace("Home")}
         >
           <Image source={Calendario} style={styles.navIcon} />
         </Pressable>
         <Pressable
           style={styles.navItem}
-          onPress={() => navigation.navigate("Hospitais")}
+          onPress={() => navigation.replace("Hospitais")}
         >
           <Image source={Localizacao} style={styles.navIcon} />
         </Pressable>
         <Pressable
           style={styles.navItem}
-          onPress={() => navigation.navigate("Home")}
+          onPress={() => navigation.replace("Home")}
         >
           <Image source={Patinha} style={styles.navIcon} />
         </Pressable>

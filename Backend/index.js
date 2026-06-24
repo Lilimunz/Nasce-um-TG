@@ -5,17 +5,28 @@ const { Client } = require("@googlemaps/google-maps-services-js");
 const cors = require('cors')
 const express = require('express')
 const mysql = require('mysql2')
+const nodemailer = require('nodemailer')
+
 const app = express()
 app.use(express.json())
 app.use(cors())
 
 const googleMapsClient = new Client({});
 
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+})
+
 const connection = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     database: process.env.DB_DATABASE,
     password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
     charset: 'utf8mb4',
     waitForConnections: true,
     connectionLimit: 10, // Permite até 10 conexões simultâneas
@@ -130,7 +141,6 @@ app.delete('/tutor/:id', async (req, res) => {
 
         if (petIds.length > 0) {
             const placeholders = petIds.map(() => '?').join(',')
-
             await conn.query(
                 `DELETE FROM tb_vacina WHERE codigo_pet IN (${placeholders})`,
                 petIds
@@ -199,6 +209,76 @@ app.get('/usuario/:email', (req, res) => {
     })
 })
 
+app.post('/esqueci-senha', async (req, res) => {
+    try {
+        const { email } = req.body
+        const [tutor] = await connection.promise().query('SELECT * FROM tb_tutor WHERE email = ?', [email])
+        
+        if (tutor.length === 0) {
+            return res.json({ erro: "E-mail não encontrado." })
+        }
+
+        // Gera um código de 6 números
+        const codigo = Math.floor(100000 + Math.random() * 900000).toString()
+        // Define a validade para 15 minutos a partir de agora
+        const expiracao = new Date(Date.now() + 15 * 60 * 1000)
+
+        // Salva no banco
+        await connection.promise().query(
+            'UPDATE tb_tutor SET token_recuperacao = ?, token_expiracao = ? WHERE email = ?',
+            [codigo, expiracao, email]
+        )
+
+        // Dispara o e-mail
+        await transporter.sendMail({
+            from: '"Equipe Guia Pet" <naoresponda@guiapet.com>',
+            to: email,
+            subject: "Recuperação de Senha",
+            text: `Olá! Seu código de recuperação é: ${codigo}. Ele é válido por 15 minutos.`
+        })
+
+        res.json({ mensagem: "Código enviado com sucesso!" })
+    } catch (erro) {
+        console.error("Erro no esqueci-senha:", erro)
+        res.json({ erro: "Erro ao enviar o e-mail." })
+    }
+})
+
+// Rota 2: Validar o código e trocar a senha
+app.post('/redefinir-senha', async (req, res) => {
+    try {
+        const { email, codigo, novaSenha } = req.body
+        const [tutorRows] = await connection.promise().query('SELECT * FROM tb_tutor WHERE email = ?', [email])
+
+        if (tutorRows.length === 0) {
+            return res.json({ erro: "Tutor não encontrado." })
+        }
+        const tutor = tutorRows[0]
+
+        // Verifica se o código bate
+        if (tutor.token_recuperacao !== codigo) {
+            return res.json({ erro: "Código inválido." })
+        }
+        // Verifica se passou de 15 minutos
+        if (new Date() > new Date(tutor.token_expiracao)) {
+            return res.json({ erro: "Código expirado. Solicite um novo." })
+        }
+
+        // Criptografa a nova senha com o mesmo bcrypt do seu login
+        const senhaHasheada = await bcrypt.hash(novaSenha, 10)
+        // Salva a senha nova e limpa os tokens
+        await connection.promise().query(
+            'UPDATE tb_tutor SET senha = ?, token_recuperacao = NULL, token_expiracao = NULL WHERE email = ?',
+            [senhaHasheada, email]
+        )
+
+        res.json({ mensagem: "Senha redefinida com sucesso!" })
+    } catch (erro) {
+        console.error("Erro no redefinir-senha:", erro)
+        res.json({ erro: "Erro ao redefinir a senha." })
+    }
+})
+
 app.get('/tutor/:id', async (req, res) => {
     try {
         const codigo_tutor = Number(req.params.id)
@@ -256,9 +336,7 @@ app.post('/pet', async (req, res) => {
         const { nome, especie, peso, porte, codigo_tutor } = req.body
 
         const insertQuery = 'INSERT INTO tb_pet (nome, especie, peso, porte, codigo_tutor) VALUES (?, ?, ?, ?, ?)'
-
         await connection.promise().query(insertQuery, [nome, especie, peso, porte, codigo_tutor])
-
         res.json({ mensagem: "Pet cadastrado com sucesso!" })
     } catch (erro) {
         console.error('Erro ao cadastrar pet:', erro)

@@ -230,13 +230,13 @@ const PginaHospitais = ({ navigation }) => {
                 </Pressable>
                 <Pressable
                     style={styles.navItem}
-                    onPress={() => navigation.navigate("Home")}
+                    onPress={() => navigation.replace("Home")}
                 >
                     <Image source={Patinha} style={styles.navIcon} />
                 </Pressable>
                 <Pressable
                     style={styles.navItem}
-                    onPress={() => navigation.navigate("Alimentos")}
+                    onPress={() => navigation.replace("Alimentos")}
                 >
                     <Image source={Racao} style={styles.navIcon} />
                 </Pressable>

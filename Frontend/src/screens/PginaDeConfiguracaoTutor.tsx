@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  Platform,
   Pressable,
   ActivityIndicator,
   Alert,
@@ -15,138 +16,151 @@ import axios from "axios";
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const PginaDeConfiguracaoTutor = ({ navigation }) => {
-  const [tutor, setTutor] = React.useState(null);
-  const [carregando, setCarregando] = React.useState(true);
-  const [erro, setErro] = React.useState("");
-  const [excluindo, setExcluindo] = React.useState(false);
+  const [tutor, setTutor] = React.useState(null)
+  const [carregando, setCarregando] = React.useState(true)
+  const [erro, setErro] = React.useState("")
+  const [excluindo, setExcluindo] = React.useState(false)
 
   const carregarTutor = React.useCallback(async () => {
-    setCarregando(true);
-    setErro("");
+    setCarregando(true)
+    setErro("")
 
     try {
-      const codigoTutor = await AsyncStorage.getItem("codigoTutor");
+      const codigoTutor = await AsyncStorage.getItem("codigoTutor")
       if (!codigoTutor) {
-        setErro("Tutor nao identificado.");
-        setCarregando(false);
-        return;
+        setErro("Tutor nao identificado.")
+        setCarregando(false)
+        return
       }
 
-      const response = await axios.get(`${API_URL}/tutor/${codigoTutor}`);
+      const response = await axios.get(`${API_URL}/tutor/${codigoTutor}`)
       if (response.data && !response.data.erro) {
-        setTutor(response.data);
+        setTutor(response.data)
       } else {
-        const nomeUsuario = await AsyncStorage.getItem("nomeUsuario");
-        const emailUsuario = await AsyncStorage.getItem("emailUsuario");
+        const nomeUsuario = await AsyncStorage.getItem("nomeUsuario")
+        const emailUsuario = await AsyncStorage.getItem("emailUsuario")
         if (nomeUsuario || emailUsuario) {
           setTutor({
             codigo_tutor: Number(codigoTutor),
             nome: nomeUsuario || "",
-            email: emailUsuario || "",
-          });
+            email: emailUsuario || ""
+          })
         } else {
-          setErro(response.data?.erro || "Nao foi possivel carregar os dados.");
+          setErro(response.data?.erro || "Nao foi possivel carregar os dados.")
         }
       }
     } catch (error) {
-      console.error("Erro ao carregar tutor:", error);
-      setErro("Nao foi possivel carregar os dados do tutor.");
+      console.error("Erro ao carregar tutor:", error)
+      setErro("Nao foi possivel carregar os dados do tutor.")
     } finally {
-      setCarregando(false);
+      setCarregando(false)
     }
-  }, []);
+  }, [])
 
   React.useEffect(() => {
-    carregarTutor();
-  }, [carregarTutor]);
+    carregarTutor()
+  }, [carregarTutor])
 
   React.useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
-      carregarTutor();
-    });
+      carregarTutor()
+    })
 
-    return unsubscribe;
-  }, [navigation, carregarTutor]);
+    return unsubscribe
+  }, [navigation, carregarTutor])
+
+  const executarExclusao = async () => {
+    setExcluindo(true)
+    try {
+      const response = await axios.delete(
+        `${API_URL}/tutor/${tutor.codigo_tutor}`
+      )
+
+      if (response.data?.erro && response.data.erro !== "Tutor nao encontrado") {
+        if (Platform.OS === 'web') window.alert(response.data.erro)
+        else Alert.alert("Erro", response.data.erro)
+        return
+      }
+
+      await AsyncStorage.multiRemove([
+        "codigoTutor",
+        "tutorId",
+        "nomeUsuario",
+        "emailUsuario",
+        "petsList"
+      ])
+
+      if (Platform.OS === 'web') window.alert("Conta excluída com sucesso!")
+      else Alert.alert("Sucesso", "Conta excluída com sucesso!")
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }]
+      })
+    } catch (error) {
+      console.error("Erro ao excluir conta:", error)
+      if (Platform.OS === 'web') window.alert("Não foi possível excluir a conta.")
+      else Alert.alert("Erro", "Não foi possível excluir a conta.")
+    } finally {
+      setExcluindo(false)
+    }
+  }
 
   const handleExcluirConta = () => {
     if (!tutor?.codigo_tutor) {
-      Alert.alert("Atencao", "Tutor nao identificado.");
-      return;
+      if (Platform.OS === 'web') window.alert("Tutor não identificado.")
+      else Alert.alert("Atenção", "Tutor não identificado.")
+      return
     }
 
-    Alert.alert(
-      "Excluir conta",
-      "Tem certeza que deseja excluir sua conta?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Excluir",
-          style: "destructive",
-          onPress: async () => {
-            setExcluindo(true);
-            try {
-              const response = await axios.delete(
-                `${API_URL}/tutor/${tutor.codigo_tutor}`
-              );
+    if (Platform.OS === 'web') {
+      const confirmar = window.confirm("Tem certeza que deseja excluir sua conta?")
+      if (confirmar) executarExclusao()
+    } else {
+      Alert.alert(
+        "Excluir conta",
+        "Tem certeza que deseja excluir sua conta?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Excluir", style: "destructive", onPress: executarExclusao }
+        ]
+      )
+    }
+  }
 
-              if (response.data?.erro) {
-                Alert.alert("Erro", response.data.erro);
-                return;
-              }
-
-              await AsyncStorage.multiRemove([
-                "codigoTutor",
-                "nomeUsuario",
-                "emailUsuario",
-                "petsList",
-              ]);
-
-              Alert.alert("Sucesso", "Conta excluida com sucesso!");
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "Login" }],
-              });
-            } catch (error) {
-              console.error("Erro ao excluir conta:", error);
-              Alert.alert("Erro", "Nao foi possivel excluir a conta.");
-            } finally {
-              setExcluindo(false);
-            }
-          },
-        },
-      ]
-    );
-  };
+  const executarDeslogar = async () => {
+    try {
+      await AsyncStorage.multiRemove([
+        "codigoTutor",
+        "tutorId",
+        "nomeUsuario",
+        "emailUsuario",
+        "petsList"
+      ])
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }]
+      })
+    } catch (error) {
+      console.error("Erro ao deslogar:", error)
+    }
+  }
 
   const handleSairConta = () => {
-    Alert.alert(
-      "Sair",
-      "Tem certeza que deseja deslogar da sua conta?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Sair",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await AsyncStorage.multiRemove([
-                "codigoTutor",
-                "nomeUsuario",
-                "emailUsuario",
-                "petsList",
-              ]);
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "Login" }],
-              });
-            } catch (error) {
-              console.error("Erro ao deslogar:", error);
-            }
-          },
-        },
-      ]
-    );
-  };
+    if (Platform.OS === 'web') {
+      const confirmar = window.confirm("Tem certeza que deseja deslogar da sua conta?")
+      if (confirmar) executarDeslogar()
+    } else {
+      Alert.alert(
+        "Sair",
+        "Tem certeza que deseja deslogar da sua conta?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Sair", style: "destructive", onPress: executarDeslogar }
+        ]
+      )
+    }
+  }
 
   if (carregando) {
     return (
@@ -156,7 +170,7 @@ const PginaDeConfiguracaoTutor = ({ navigation }) => {
           <Text style={styles.helperText}>Carregando...</Text>
         </View>
       </SafeAreaView>
-    );
+    )
   }
 
   return (
@@ -201,9 +215,8 @@ const PginaDeConfiguracaoTutor = ({ navigation }) => {
         </Pressable>
       </ScrollView>
     </SafeAreaView>
-  );
-};
-
+  )
+}
 const styles = StyleSheet.create({
   container: {
     flex: 1,

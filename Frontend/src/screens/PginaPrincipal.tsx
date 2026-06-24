@@ -142,7 +142,7 @@ export function PginaPrincipal({ navigation }) {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.navItem}
-                    onPress={() => navigation.navigate("Hospitais")}
+                    onPress={() => navigation.replace("Hospitais")}
                 >
                     <Image source={Localizacao} style={styles.navIcon} />
                 </TouchableOpacity>
@@ -151,7 +151,7 @@ export function PginaPrincipal({ navigation }) {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.navItem}
-                    onPress={() => navigation.navigate("Alimentos")}
+                    onPress={() => navigation.replace("Alimentos")}
                 >
                     <Image source={Racao} style={styles.navIcon} />
                 </TouchableOpacity>

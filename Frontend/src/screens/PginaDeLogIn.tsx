@@ -128,6 +128,7 @@ const PginaDeLogIn = ({ navigation }) => {
 
   const handleEsqueciSenha = () => {
     // lógica de esqueci senha aqui
+    navigation.navigate("EsqueciSenha")
   };
 
   const handleHome = () => {

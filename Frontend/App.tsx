@@ -18,6 +18,7 @@ import PginaDeEditarTutor from "./src/screens/PginaDeEditarTutor";
 import TelaDeAlimentos from "./src/screens/TelaDeAlimentos";
 import PginaHospitais from "./src/screens/PginaHospitais";
 import PginaHospitalDetalhes from "./src/screens/PginaHospitalDetalhes";
+import PginaDeEsqueciASenha from "./src/screens/PginaDeEsqueciASenha";
 
 const Stack = createStackNavigator()
 
@@ -51,9 +52,11 @@ export default function App() {
           <Stack.Screen name="CadastroVacina" component={PginaDeCadastroDeVacina} />
           <Stack.Screen name="CadastroMedicamento" component={PginaDeCadastroDeMedicamento} />
           <Stack.Screen name="Login" component={PginaDeLogIn} />
+          <Stack.Screen name="EsqueciSenha" component={PginaDeEsqueciASenha} options={{ headerShown: false }} />
           <Stack.Screen name="Cadastro" component={PginaDeCadia} />
           <Stack.Screen name="CadastroPrincipal" component={PginaDeCadastro} />
           <Stack.Screen name="Alimentos" component={TelaDeAlimentos} />
+
         </Stack.Navigator>
       </NavigationContainer>
       <StatusBar style="light" />

@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { InputCustomizado } from "../components/InputFields";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -275,20 +276,18 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
             </View>
           )}
         </View>
-
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>
             Nome do medicamento <Text style={styles.requiredMarker}>*</Text>
           </Text>
-          <TextInput
-            style={styles.input}
+          <InputCustomizado
+            variant="secundaria"
             placeholder="Nome do medicamento"
             placeholderTextColor="rgba(212, 233, 255, 0.7)"
             value={nomeMedicamento}
             onChangeText={setNomeMedicamento}
           />
         </View>
-
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>
             Classificação <Text style={styles.requiredMarker}>*</Text>
@@ -328,11 +327,9 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
             </View>
           )}
         </View>
-
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>Data de validade</Text>
           <View style={[styles.inputRow, styles.inputDate]}>
-            <Text style={styles.inputIconLeft}>📅</Text>
             <TextInput
               style={styles.inputField}
               placeholder="DD/MM/AAAA"
@@ -344,18 +341,16 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
             />
           </View>
         </View>
-
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>Dosagem</Text>
-          <TextInput
-            style={styles.input}
+          <InputCustomizado
+            variant="secundaria"
             placeholder="Dosagem"
             placeholderTextColor="rgba(212, 233, 255, 0.7)"
             value={dosagem}
             onChangeText={setDosagem}
           />
         </View>
-
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>
             Frequência <Text style={styles.requiredMarker}>*</Text>
@@ -395,11 +390,9 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
             </View>
           )}
         </View>
-
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>Data de início</Text>
           <View style={[styles.inputRow, styles.inputDate]}>
-            <Text style={styles.inputIconLeft}>📅</Text>
             <TextInput
               style={styles.inputField}
               placeholder="DD/MM/AAAA"
@@ -411,11 +404,9 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
             />
           </View>
         </View>
-
         <View style={styles.fieldContainer}>
           <Text style={styles.fieldLabel}>Data de fim</Text>
           <View style={[styles.inputRow, styles.inputDate]}>
-            <Text style={styles.inputIconLeft}>📅</Text>
             <TextInput
               style={styles.inputField}
               placeholder="DD/MM/AAAA"
@@ -427,7 +418,6 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
             />
           </View>
         </View>
-
         <View style={styles.buttonsRow}>
           <Pressable
             style={[styles.button, styles.buttonCancel]}
@@ -441,7 +431,7 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
             onPress={handleConfirmar}
             disabled={salvando}
           >
-            <Text style={styles.buttonConfirmText}>💊 Confirmar</Text>
+            <Text style={styles.buttonConfirmText}>Confirmar</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -493,15 +483,6 @@ const styles = StyleSheet.create({
   },
   requiredMarker: {
     color: "#F6B1B1",
-  },
-  input: {
-    borderWidth: 2,
-    borderColor: "#D4E9FF",
-    borderRadius: 14,
-    height: 50,
-    paddingHorizontal: 16,
-    color: "#D4E9FF",
-    fontFamily: "MuseoModerno-Regular",
   },
   inputRow: {
     flexDirection: "row",

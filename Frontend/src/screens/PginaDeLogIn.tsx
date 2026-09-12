@@ -1,140 +1,23 @@
 import * as React from "react";
-import axios from 'axios';
-import { StyleSheet, Text, TextInput, View, Pressable, Alert } from "react-native";
+import { Text, View, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { InputCustomizado } from "../components/InputFields";
+import { useLogin } from "../hooks/useLogin";
+import { styles } from './PginaDeLogInStyles';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-import Facebook from "../../assets/images/facebook.svg";
-import Google from "../../assets/images/google.svg";
-import Eye from "../../assets/images/eye.svg";
+import Facebook from "../../assets/images/facebook.svg"
+import Google from "../../assets/images/google.svg"
+import Eye from "../../assets/images/eye.svg"
 import Apple from '../../assets/images/apple.svg'
 
-const PginaDeLogIn = ({ navigation }) => {
-  const [email, setEmail] = React.useState("");
-  const [senha, setSenha] = React.useState("");
-  const [showSenha, setShowSenha] = React.useState(false);
-  
-  React.useEffect(() => {
-    const verificarSessao = async () => {
-      try {
-        // Tenta achar o ID salvo
-        const idSalvo = await AsyncStorage.getItem('tutorId');
-
-        if (idSalvo !== null) {
-          // Se o ID existe, o usuário já está logado! Pula pra tela principal.
-          navigation.replace("Home", { tutorId: idSalvo });
-        }
-      } catch (error) {
-        console.error("Erro ao ler a sessão", error);
-      }
-    };
-
-    verificarSessao();
-  }, []); // Os colchetes vazios garantem que isso só rode uma vez quando a tela carregar
-  const handleLogin = async () => {
-    const emailNormalizado = email.trim().toLowerCase();
-    const senhaNormalizada = senha;
-
-    // 1. Verifica se os campos estão vazios
-    if (!emailNormalizado || !senhaNormalizada) {
-      Alert.alert("Atenção", "Preencha todos os campos!");
-      return;
-    }
-    try {
-      // 2. Faz a requisição para o backend 
-      const response = await axios.post(`${API_URL}/login`, {
-        email: emailNormalizado,
-        senha: senhaNormalizada,
-      });
-      // 3. Lê a resposta do seu backend para tratar senhas inválidas 
-      if (response.data === "senha inválida") {
-        Alert.alert("Ops!", "Senha inválida. Tente novamente.");
-        return;
-      }
-      if (response.data === "Usuário não encontrado") {
-        Alert.alert("Ops!", "Usuário não encontrado.");
-        return;
-      }
-      if (response.data === "Erro interno no login") {
-        Alert.alert("Erro", "Não foi possível concluir o login.");
-        return;
-      }
-
-      if (response.data && response.data.codigo_tutor !== undefined && response.data.codigo_tutor !== null) {
-        await AsyncStorage.setItem('codigoTutor', String(response.data.codigo_tutor));
-        if (response.data.nome) {
-          await AsyncStorage.setItem('nomeUsuario', String(response.data.nome));
-        }
-        await AsyncStorage.setItem('emailUsuario', emailNormalizado);
-
-        // Buscar perfil completo do tutor (com pets) no backend
-        try {
-          const perfilResponse = await axios.get(`${API_URL}/tutor/${response.data.codigo_tutor}/perfil`);
-          if (perfilResponse.data && perfilResponse.data.pets) {
-            await AsyncStorage.setItem('petsList', JSON.stringify(perfilResponse.data.pets));
-          }
-        } catch (erroInterno) {
-          console.log("Aviso: Não foi possível carregar os pets no login, será carregado mais tarde:", erroInterno);
-        }
-      } else {
-        // Fallback para compatibilidade caso o backend ainda retorne no formato antigo.
-        try {
-          const usuarioResponse = await axios.get(`${API_URL}/usuario/${encodeURIComponent(emailNormalizado)}`);
-          if (usuarioResponse.data && usuarioResponse.data.nome) {
-            await AsyncStorage.setItem('nomeUsuario', usuarioResponse.data.nome);
-            await AsyncStorage.setItem('emailUsuario', emailNormalizado);
-            if (usuarioResponse.data.codigo_tutor !== undefined && usuarioResponse.data.codigo_tutor !== null) {
-              await AsyncStorage.setItem('codigoTutor', String(usuarioResponse.data.codigo_tutor));
-            } else {
-              Alert.alert("Erro", "Não foi possível recuperar o código do tutor.");
-              return;
-            }
-          } else {
-            Alert.alert("Erro", "Não foi possível recuperar os dados do usuário.");
-            return;
-          }
-        } catch (erro) {
-          console.log("Não foi possível recuperar dados do usuário:", erro);
-          Alert.alert("Erro", "Não foi possível recuperar o código do tutor.");
-          return;
-        }
-      }
-
-      // 5. Se passou por tudo, exibe a mensagem de sucesso!
-      Alert.alert("Sucesso!", "Bem-vindo(a) ao Guia Pet!");
-      const idDoTutor = response.data.codigo_tutor ?? response.data.tutor?.codigo_tutor;
-
-      // SALVA O ID NA MEMÓRIA DO CELULAR (Ele só aceita texto, por isso o toString)
-      await AsyncStorage.setItem('tutorId', idDoTutor.toString());
-
-      // Limpa os campos
-      setEmail("");
-      setSenha("");
-
-      // Navega para a Home (usei o 'replace' para ele não conseguir voltar pra tela de login arrastando o dedo)
-      navigation.replace("Home", { tutorId: idDoTutor });
-    } catch (erro) {
-      console.error("Erro no login:", erro);
-      Alert.alert("Erro de Conexão", "Não foi possível ligar ao servidor.");
-    }
-  }
-
-  const handleCadastro = () => {
-    // lógica de cadastro aqui
-    navigation.navigate("CadastroPrincipal")
-  };
-
-  const handleEsqueciSenha = () => {
-    // lógica de esqueci senha aqui
-    navigation.navigate("EsqueciSenha")
-  };
-
-  const handleHome = () => {
-    // lógica de cadastro aqui
-    navigation.navigate("Cadastro")
-  };
+export const PginaDeLogIn = ({ navigation }: { navigation: any }) => {
+  // Puxa tudo do Hook
+  const {
+    email, setEmail,
+    senha, setSenha,
+    showSenha, setShowSenha,
+    handleLogin, handleCadastro, handleEsqueciSenha, handleHome
+  } = useLogin(navigation);
 
   return (
     <SafeAreaView style={styles.pginaDeLogIn}>
@@ -156,8 +39,7 @@ const PginaDeLogIn = ({ navigation }) => {
             </View>
           </View>
           <View style={styles.inputsContainer}>
-            <TextInput
-              style={styles.input}
+            <InputCustomizado
               value={email}
               onChangeText={setEmail}
               placeholder="Digite seu email"
@@ -166,8 +48,7 @@ const PginaDeLogIn = ({ navigation }) => {
               keyboardType="email-address"
             />
             <View style={styles.senhaFieldContainer}>
-              <TextInput
-                style={styles.input}
+              <InputCustomizado
                 value={senha}
                 onChangeText={setSenha}
                 secureTextEntry={!showSenha}
@@ -205,213 +86,7 @@ const PginaDeLogIn = ({ navigation }) => {
         </View>
       </View>
     </SafeAreaView>
-  );
-};
-
-const styles = StyleSheet.create({
-  pginaDeLogIn: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#344759",
-  },
-  view: {
-    width: "100%",
-    maxWidth: 400,
-    flex: 1,
-    alignSelf: "center",
-  },
-  logInPage: {
-    flex: 1,
-    width: "100%",
-    padding: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#344759",
-  },
-  logIn1: {
-    fontFamily: "MuseoModerno-Bold",
-    fontWeight: "700",
-    fontSize: 35,
-    color: "#d4e9ff",
-    textAlign: "center",
-    marginBottom: 24,
-  },
-  faaLoginCom: {
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  pginaDeLogInFaaLoginCom: {
-    fontWeight: "600",
-    fontFamily: "MuseoModerno-SemiBold",
-    textAlign: "center",
-    color: "#d4e9ff",
-    fontSize: 15,
-    marginBottom: 12,
-  },
-  socialIconsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 25,
-    marginTop: 8,
-  },
-  socialIcon: {
-    marginHorizontal: 8,
-  },
-  inputsContainer: {
-    width: "100%",
-    marginBottom: 24,
-  },
-  input: {
-    height: 55,
-    backgroundColor: "#f8f8f8",
-    borderRadius: 17,
-    paddingLeft: 16,
-    color: "#344759",
-    fontSize: 16,
-    fontFamily: "MuseoModerno-Regular",
-    marginBottom: 25, // aumente aqui para mais espaçamento entre as caixas
-    boxShadow: "0px 4px 12px rgba(0,0,0,0.30)", // sombra para web
-    shadowOpacity: 0.15, // sombra para mobile
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    shadowColor: "#000",
-  },
-  senhaFieldContainer: {
-    position: "relative",
-    marginBottom: 25,
-    justifyContent: "center",
-  },
-  eyeIconBtn: {
-    position: "absolute",
-    right: 16,
-    top: 16,
-    opacity: 0.92,
-    height: 24,
-    width: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  esqueciASenhaBtn: {
-    position: "absolute",
-    right: 16,
-    bottom: -22,
-  },
-  esqueciASenha: {
-    fontFamily: "MuseoModerno-Medium",
-    fontWeight: "500",
-    textAlign: "right",
-    color: "#d4e9ff",
-    fontSize: 15,
-    textDecorationLine: "underline"
-  },
-  rectangleContainer: {
-    width: "80%",
-    alignSelf: "center",
-    marginTop: 16,
-    marginBottom: 24,
-    shadowOpacity: 1,
-    elevation: 4,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 4 },
-    shadowColor: "rgba(0, 0, 0, 1)",
-  },
-  pginaDeLogInLogIn: {
-    fontSize: 20,
-    color: "#d4e9ff",
-    fontFamily: "MuseoModerno-Bold",
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  buttonPressed: {
-    opacity: 0.7,
-  },
-  cadastreSeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
-  },
-  noTemUma: {
-    color: "#f8f8f8",
-    fontFamily: "MuseoModerno-Regular",
-    fontSize: 18,
-    textAlign: "left",
-  },
-  cadastreSe2: {
-    fontSize: 18,
-    fontFamily: "MuseoModerno-Medium",
-    fontWeight: "500",
-    textAlign: "left",
-    color: "#d4e9ff",
-    textDecorationLine: "underline"
-  },
-  pginaDeLogInGroupParent: {
-    marginTop: -119,
-    marginLeft: -137.5,
-    width: 259,
-    height: 53,
-    left: "50%",
-    top: "50%",
-  },
-  rectangleParent: {
-    marginLeft: -26.5,
-    width: 53,
-    marginTop: -26.5
-  },
-  groupIcon: { //caixinha do google
-    marginLeft: -129.5,
-    width: 53,
-    marginTop: -22.5
-  },
-  logIn: {//titulo de login da pg posição
-    marginTop: -283.5,
-    marginLeft: -52.5,
-  },
-  rectanglePressable: { //retangulo do botão
-    backgroundColor: "#336699",
-    borderRadius: 17,
-    width: "100%",
-    height: 55,
-    justifyContent: "center",
-    alignItems: "center",
-    boxShadow: "0px 4px 12px rgba(0,0,0,0.25)", // sombra para web
-    shadowOpacity: 0.25, // sombra para mobile
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    shadowColor: "#000",
-  },
-  pginaDeLogInGroupChild: {
-    marginTop: 64
-  },
-  senha: {
-    left: 0,
-    marginTop: 79
-  },
-  eyeIcon: {
-    right: 21,
-    width: 24,
-    opacity: 0.92,
-    marginTop: 79,
-    height: 24
-  },
-  groupChild2: {
-    marginTop: -21
-  },
-  email: {
-    marginTop: -6,
-    left: 0
-  },
-  senhaTypo: {
-    color: "#344759",
-    fontSize: 16,
-    fontFamily: "MuseoModerno-Regular",
-    textAlign: "left",
-    top: "47%",
-    position: "absolute"
-  },
-});
+  )
+}
 
 export default PginaDeLogIn;

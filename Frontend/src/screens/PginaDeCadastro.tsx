@@ -4,6 +4,7 @@ import { StyleSheet, Text, TextInput, View, Pressable, Alert } from "react-nativ
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Eye from "../../assets/images/eye.svg";
+import { InputCustomizado } from "../components/InputFields";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -73,15 +74,13 @@ const handleCadastro = async () => {
         <View style={styles.cadastroPage}>
           <Text style={styles.titulo}>Crie sua conta</Text>
           <View style={styles.inputsContainer}>
-            <TextInput
-              style={styles.input}
+            <InputCustomizado
               value={nome}
               onChangeText={setNome}
               placeholder="Nome"
               placeholderTextColor="#344759"
             />
-            <TextInput
-              style={styles.input}
+            <InputCustomizado
               value={email}
               onChangeText={setEmail}
               placeholder="Email"
@@ -90,7 +89,7 @@ const handleCadastro = async () => {
               keyboardType="email-address"
             />
             <View style={styles.senhaFieldContainer}>
-              <TextInput
+              <InputCustomizado
                 style={styles.input}
                 value={senha}
                 onChangeText={setSenha}
@@ -105,8 +104,8 @@ const handleCadastro = async () => {
                 <Eye width={24} height={24} />
               </Pressable>
             </View>
-            <TextInput
-              style={[styles.input, { marginBottom: 0 }]}
+            <InputCustomizado
+              style={[{ marginBottom: 0 }]}
               value={confirmaSenha}
               onChangeText={setConfirmaSenha}
               secureTextEntry={!showSenha}
@@ -169,21 +168,6 @@ const styles = StyleSheet.create({
   inputsContainer: {
     width: "100%",
     marginBottom: 24,
-  },
-  input: {
-    height: 55,
-    backgroundColor: "#f8f8f8",
-    borderRadius: 17,
-    paddingLeft: 16,
-    color: "#344759",
-    fontSize: 16,
-    fontFamily: "MuseoModerno-Regular",
-    marginBottom: 28,
-    boxShadow: "0px 4px 12px rgba(0,0,0,0.15)",
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    shadowColor: "#000",
   },
   senhaFieldContainer: {
     position: "relative",

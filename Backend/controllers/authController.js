@@ -110,3 +110,44 @@ exports.redefinirSenha = async (req, res) => {
         res.json({ erro: "Erro ao redefinir a senha." })
     }
 }
+
+exports.loginGoogle = async (req, res) => {
+    try {
+        // O front end vai nos mandar o email e o nome direto do Google
+        const { email, nome } = req.body
+
+        if (!email) {
+            return res.json("E-mail não fornecido pelo Google.")
+        }
+
+        // 1. Verifica se o usuário já existe no banco
+        const [tutorExistente] = await db.query('SELECT * FROM tb_tutor WHERE email = ?', [email]);
+
+        if (tutorExistente.length > 0) {
+            const compuse = tutorExistente[0]
+            // Usuário já existe, devolvemos os dados para o login
+            return res.json({
+                mensagem: "Login via Google realizado com sucesso",
+                codigo_tutor: compuse.codigo_tutor,
+                nome: compuse.nome,
+                email: compuse.email,
+                tipo_login: compuse.tipo_login
+            })
+        }
+        // 2. Se não existe, vamos criar a conta dele agora mesmo (sem senha)
+        const insertQuery = 'INSERT INTO tb_tutor (nome, email, tipo_login) VALUES (?, ?, ?)';
+        const [novoTutor] = await db.query(insertQuery, [nome, email, 'google'])
+
+        return res.json({
+            mensagem: "Cadastro via Google realizado com sucesso",
+            codigo_tutor: novoTutor.insertId,
+            nome: nome,
+            email: email,
+            tipo_login: 'google'
+        });
+
+    } catch (erro) {
+        console.error("Erro no login com Google:", erro)
+        return res.json("Erro interno no login com Google")
+    }
+};

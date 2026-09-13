@@ -16,7 +16,8 @@ export const PginaDeLogIn = ({ navigation }: { navigation: any }) => {
     email, setEmail,
     senha, setSenha,
     showSenha, setShowSenha,
-    handleLogin, handleCadastro, handleEsqueciSenha, handleHome
+    handleLogin, handleCadastro, handleEsqueciSenha, handleHome,
+    promptAsync
   } = useLogin(navigation);
 
   return (
@@ -27,7 +28,7 @@ export const PginaDeLogIn = ({ navigation }: { navigation: any }) => {
           <View style={styles.faaLoginCom}>
             <Text style={styles.pginaDeLogInFaaLoginCom}>Faça login com</Text>
             <View style={styles.socialIconsRow}>
-              <Pressable onPress={() => { /* lógica Google */ }}>
+              <Pressable onPress={() => promptAsync()}>
                 <Google style={styles.socialIcon} width={50} height={50} />
               </Pressable>
               <Pressable onPress={() => { /* lógica Facebook */ }}>

@@ -2,13 +2,64 @@ import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
 
 export function useLogin(navigation: any) {
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
     const [showSenha, setShowSenha] = useState(false);
+
+    const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: GOOGLE_CLIENT_ID,
+  });
+
+useEffect(() => {
+    const processarLoginGoogle = async () => {
+      if (response?.type === 'success') {
+        const token = response.authentication?.accessToken;
+        
+        try {
+          // Passo A: Pede os dados do usuário para o Google usando o token
+          const userInfoResponse = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const googleUser = await userInfoResponse.json();
+
+          // Passo B: Manda o e-mail e nome para o backend
+          const backendResponse = await axios.post(`${API_URL}/login-google`, {
+            email: googleUser.email,
+            nome: googleUser.name,
+          });
+
+          const dados = backendResponse.data;
+          // Passo C: Se o backend devolver o codigo_tutor, salva a sessão e navega
+          if (dados && dados.codigo_tutor) {
+            await AsyncStorage.setItem('tutorId', String(dados.codigo_tutor));
+            await AsyncStorage.setItem('codigoTutor', String(dados.codigo_tutor));
+            await AsyncStorage.setItem('nomeUsuario', dados.nome);
+            await AsyncStorage.setItem('emailUsuario', dados.email);
+
+            Alert.alert("Sucesso!", dados.mensagem);
+            navigation.replace("Home", { tutorId: dados.codigo_tutor });
+          } else {
+            Alert.alert("Erro", "Não foi possível registrar o usuário via Google.");
+          }
+        } catch (error) {
+          console.error("Erro ao processar Google:", error);
+          Alert.alert("Erro de Conexão", "Não foi possível validar o login com o Google.");
+        }
+      } else if (response?.type === 'error') {
+        Alert.alert("Ops", "O login com o Google foi cancelado ou falhou.");
+      }
+    };
+    processarLoginGoogle();
+  }, [response]);
 
     // 2. Verifica a Sessão 
     useEffect(() => {
@@ -89,7 +140,6 @@ export function useLogin(navigation: any) {
                     return;
                 }
             }
-
             Alert.alert("Sucesso!", "Bem-vindo(a) ao Guia Pet!");
             const idDoTutor = response.data.codigo_tutor ?? response.data.tutor?.codigo_tutor;
             await AsyncStorage.setItem('tutorId', idDoTutor.toString())
@@ -127,6 +177,7 @@ export function useLogin(navigation: any) {
         handleLogin,
         handleCadastro,
         handleEsqueciSenha,
-        handleHome
+        handleHome,
+        promptAsync // Exportamos a função que "chama" o Google
     };
 }

@@ -31,6 +31,9 @@
         "projectId": "526471aa-c5b2-4ec4-91eb-e43c122066c2"
       }
     },
-    "owner": "alicia_muniz"
+    "owner": "alicia_muniz",
+    "plugins": [
+      "expo-web-browser"
+    ]
   }
 }

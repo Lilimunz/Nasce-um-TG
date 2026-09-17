@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import * as WebBrowser from 'expo-web-browser';
@@ -7,9 +7,14 @@ import * as Google from 'expo-auth-session/providers/google';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_URL =
+    Platform.OS === "web"
+        ? process.env.EXPO_PUBLIC_API_URL_WEB ||
+          "http://localhost:3000"
+        : process.env.EXPO_PUBLIC_API_MAPS ||
+          "http://10.0.2.2:3000";
 const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
-
+const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 export function useLogin(navigation: any) {
     const [email, setEmail] = useState("");
     const [senha, setSenha] = useState("");
@@ -17,8 +22,8 @@ export function useLogin(navigation: any) {
 
     const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: GOOGLE_CLIENT_ID,
+    androidClientId: GOOGLE_ANDROID_CLIENT_ID,
   });
-
 useEffect(() => {
     const processarLoginGoogle = async () => {
       if (response?.type === 'success') {

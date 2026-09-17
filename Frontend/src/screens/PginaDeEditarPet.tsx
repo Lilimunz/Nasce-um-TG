@@ -8,12 +8,17 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
+const API_URL =
+    Platform.OS === "web"
+        ? process.env.EXPO_PUBLIC_API_URL_WEB ||
+          "http://localhost:3000"
+        : process.env.EXPO_PUBLIC_API_MAPS ||
+          "http://10.0.2.2:3000";
 const formatarDataBr = (valor: string | null | undefined) => {
   if (!valor) {
     return "";

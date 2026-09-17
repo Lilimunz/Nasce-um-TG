@@ -2,23 +2,16 @@
   "expo": {
     "name": "frontend",
     "slug": "frontend",
+    "scheme": "guiapet",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "android": {
-      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.alicia_muniz.frontend"
-    },
-    "splash": {
-      "image": "",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true
@@ -33,7 +26,9 @@
     },
     "owner": "alicia_muniz",
     "plugins": [
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font",
+      "expo-status-bar"
     ]
   }
 }

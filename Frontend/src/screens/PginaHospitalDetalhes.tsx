@@ -1,5 +1,5 @@
 import * as React from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Linking } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Linking, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path, Circle } from "react-native-svg";
 import axios from "axios";
@@ -35,7 +35,10 @@ const DirectionsIcon = () => (
     </Svg>
 );
 
-const API_URL = process.env.EXPO_PUBLIC_API_MAPS;
+const API_URL =
+    Platform.OS === "web"
+        ? process.env.EXPO_PUBLIC_API_URL_WEB || "http://localhost:3000"
+        : process.env.EXPO_PUBLIC_API_MAPS || "http://10.0.2.2:3000";
 
 const translateType = (type) => {
     const typesMap = {
@@ -54,25 +57,50 @@ const PginaHospitalDetalhes = ({ route, navigation }) => {
     const [telefone, setTelefone] = React.useState(hospital?.telefone || "");
     const [buscandoTel, setBuscandoTel] = React.useState(!hospital?.telefone);
 
-    React.useEffect(() => { 
-        if (hospital?.id && !telefone) {
-            console.log('Fetching phone for hospital id:', hospital.id);
-            axios.get(`${API_URL}/hospitais/detalhes/${hospital.id}`)
-                .then(res => {
-                    const phone = res.data?.international_phone_number || res.data?.formatted_phone_number;
-                    if (phone) {
-                        setTelefone(phone);
-                    }
-                })
-                .catch(err => {
-                console.error('Erro ao buscar detalhes do hospital:', err.response?.data || err.message);
-                console.error('Full error object:', err);
-            })
-                .finally(() => setBuscandoTel(false));
-        } else {
+React.useEffect(() => {
+    if (hospital?.id && !telefone) {
+        const url = `${API_URL}/hospitais/detalhes/${hospital.id}`;
+
+        if (!API_URL) {
+            console.error("API_URL não foi configurada.");
             setBuscandoTel(false);
+            return;
         }
-    }, [hospital]);
+
+        axios
+            .get(url, { timeout: 10000 })
+            .then((res) => {
+                const phone =
+                res.data?.nationalPhoneNumber ||
+                res.data?.internationalPhoneNumber ||
+                res.data?.international_phone_number ||
+                res.data?.formatted_phone_number;
+                if (phone) {
+                    setTelefone(phone);
+                }
+            })
+            .catch((err) => {
+                if (err.response) {
+                    console.error(
+                        "Erro HTTP:",
+                        err.response.status,
+                        err.response.data
+                    );
+                } else if (err.request) {
+                    console.error(
+                        "Servidor não respondeu. Verifique API_URL, IP, porta e conexão."
+                    );
+                } else {
+                    console.error("Erro ao configurar requisição:", err.message);
+                }
+            })
+            .finally(() => {
+                setBuscandoTel(false);
+            });
+    } else {
+        setBuscandoTel(false);
+    }
+}, [hospital, telefone]);
 
     if (!hospital) {
         return (

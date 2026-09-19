@@ -19,6 +19,7 @@ import TelaDeAlimentos from "./src/screens/TelaDeAlimentos";
 import PginaHospitais from "./src/screens/PginaHospitais";
 import PginaHospitalDetalhes from "./src/screens/PginaHospitalDetalhes";
 import PginaDeEsqueciASenha from "./src/screens/PginaDeEsqueciASenha";
+import PaginaDeAgenda from './src/screens/PginaDeAgenda';
 
 const Stack = createStackNavigator()
 
@@ -39,25 +40,43 @@ export default function App() {
       <NavigationContainer>
         {/* 'initialRouteName' define qual tela abre primeiro. Geralmente é o Login. */}
         <Stack.Navigator
-          initialRouteName="Login"
-          screenOptions={{ headerShown: false }}
-        >
-          <Stack.Screen name="Home" component={PginaPrincipal} />
-          <Stack.Screen name="Hospitais" component={PginaHospitais} />
-          <Stack.Screen name="HospitalDetalhes" component={PginaHospitalDetalhes} />
-          <Stack.Screen name="PetProfile" component={PetProfile} />
-          <Stack.Screen name="EditarPet" component={PginaDeEditarPet} />
-          <Stack.Screen name="ConfiguracaoTutor" component={PginaDeConfiguracaoTutor} />
-          <Stack.Screen name="EditarTutor" component={PginaDeEditarTutor} />
-          <Stack.Screen name="CadastroVacina" component={PginaDeCadastroDeVacina} />
-          <Stack.Screen name="CadastroMedicamento" component={PginaDeCadastroDeMedicamento} />
-          <Stack.Screen name="Login" component={PginaDeLogIn} />
-          <Stack.Screen name="EsqueciSenha" component={PginaDeEsqueciASenha} options={{ headerShown: false }} />
-          <Stack.Screen name="Cadastro" component={PginaDeCadia} />
-          <Stack.Screen name="CadastroPrincipal" component={PginaDeCadastro} />
-          <Stack.Screen name="Alimentos" component={TelaDeAlimentos} />
-
-        </Stack.Navigator>
+  initialRouteName="Login"
+  screenOptions={{ headerShown: false }}
+>
+  <Stack.Screen name="Home" component={PginaPrincipal} />
+  <Stack.Screen name="Agenda" component={PaginaDeAgenda} />
+  <Stack.Screen name="Hospitais" component={PginaHospitais} />
+  <Stack.Screen
+    name="HospitalDetalhes"
+    component={PginaHospitalDetalhes}
+  />
+  <Stack.Screen name="PetProfile" component={PetProfile} />
+  <Stack.Screen name="EditarPet" component={PginaDeEditarPet} />
+  <Stack.Screen
+    name="ConfiguracaoTutor"
+    component={PginaDeConfiguracaoTutor}
+  />
+  <Stack.Screen name="EditarTutor" component={PginaDeEditarTutor} />
+  <Stack.Screen
+    name="CadastroVacina"
+    component={PginaDeCadastroDeVacina}
+  />
+  <Stack.Screen
+    name="CadastroMedicamento"
+    component={PginaDeCadastroDeMedicamento}
+  />
+  <Stack.Screen name="Login" component={PginaDeLogIn} />
+  <Stack.Screen
+    name="EsqueciSenha"
+    component={PginaDeEsqueciASenha}
+  />
+  <Stack.Screen name="Cadastro" component={PginaDeCadia} />
+  <Stack.Screen
+    name="CadastroPrincipal"
+    component={PginaDeCadastro}
+  />
+  <Stack.Screen name="Alimentos" component={TelaDeAlimentos} />
+</Stack.Navigator>
       </NavigationContainer>
       <StatusBar style="light" />
     </SafeAreaProvider>

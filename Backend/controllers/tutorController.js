@@ -36,6 +36,10 @@ exports.deletarTutor = async (req, res) => {
 
         if (petIds.length > 0) {
             const placeholders = petIds.map(() => '?').join(',');
+            await conn.query(
+                `DELETE FROM tb_lembrete WHERE codigo_pet IN (${placeholders})`,
+                petIds
+            );
             await conn.query(`DELETE FROM tb_vacina WHERE codigo_pet IN (${placeholders})`, petIds);
             const [medRows] = await conn.query(`SELECT DISTINCT codigo_medicamento FROM tb_pet_medicamento WHERE codigo_pet IN (${placeholders})`, petIds);
             const medIds = medRows.map((row) => row.codigo_medicamento)

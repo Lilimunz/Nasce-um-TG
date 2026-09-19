@@ -144,15 +144,14 @@ const normalizarHospitais = (
                     "Local sem nome",
 
                 endereco:
-                    lugar.formattedAddress ||
-                    lugar.vicinity ||
-                    "Endereço não informado",
+                    (lugar.formattedAddress || lugar.vicinity || "Endereço não informado")
+                        .replace(/Brazil/g, "Brasil"),
 
                 tipo: traduzirTipo(types),
 
                 status,
 
-                horario:"",
+                horario: "",
 
                 telefone:
                     lugar.nationalPhoneNumber ||
@@ -178,153 +177,153 @@ const PginaHospitais = ({
     const [carregando, setCarregando] = React.useState(true);
     const [erro, setErro] = React.useState("");
 
-const buscarHospitaisNoBackend = React.useCallback(
-    async (lat: number, lng: number) => {
+    const buscarHospitaisNoBackend = React.useCallback(
+        async (lat: number, lng: number) => {
+            setCarregando(true);
+            setErro("");
+
+            try {
+                const response = await axios.get(
+                    `${API_URL}/hospitais`,
+                    {
+                        params: {
+                            lat,
+                            lng,
+                        },
+                    }
+                );
+
+                const lugares: PlaceNew[] = Array.isArray(
+                    response.data?.places
+                )
+                    ? response.data.places
+                    : Array.isArray(response.data)
+                        ? response.data
+                        : [];
+
+                const hospitaisNormalizados =
+                    normalizarHospitais(lugares);
+
+                setHospitais(hospitaisNormalizados);
+
+                if (hospitaisNormalizados.length === 0) {
+                    setErro(
+                        "Nenhum hospital encontrado nessa região."
+                    );
+                }
+            } catch (error: any) {
+                console.error(
+                    "Erro ao buscar hospitais:",
+                    error.response?.data || error.message
+                );
+
+                setHospitais([]);
+
+                if (error.response?.data?.error) {
+                    setErro(error.response.data.error);
+                } else {
+                    setErro(
+                        "Não foi possível consultar os hospitais."
+                    );
+                }
+            } finally {
+                setCarregando(false);
+            }
+        },
+        []
+    );
+
+    const buscarPorGPS = React.useCallback(async () => {
         setCarregando(true);
         setErro("");
 
         try {
+            const { status } =
+                await Location.requestForegroundPermissionsAsync();
+
+            if (status !== "granted") {
+                setErro("Permissão de localização negada.");
+                setCarregando(false);
+                return;
+            }
+
+            const localAtual =
+                await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.Balanced,
+                });
+
+            await buscarHospitaisNoBackend(
+                localAtual.coords.latitude,
+                localAtual.coords.longitude
+            );
+        } catch (error) {
+            console.error(
+                "Erro ao capturar localização:",
+                error
+            );
+
+            setErro(
+                "Erro ao capturar sua localização atual."
+            );
+            setCarregando(false);
+        }
+    }, [buscarHospitaisNoBackend]);
+
+    const buscarPorEnderecoTexto = async () => {
+        const endereco = enderecoAtual.trim();
+
+        if (!endereco) {
+            setErro("Digite um endereço para pesquisar.");
+            return;
+        }
+
+        setCarregando(true);
+        setErro("");
+        setHospitais([]);
+
+        try {
             const response = await axios.get(
-                `${API_URL}/hospitais`,
+                `${API_URL}/geocode`,
                 {
                     params: {
-                        lat,
-                        lng,
+                        address: endereco,
                     },
                 }
             );
 
-            const lugares: PlaceNew[] = Array.isArray(
-                response.data?.places
-            )
-                ? response.data.places
-                : Array.isArray(response.data)
-                    ? response.data
-                    : [];
+            const { latitude, longitude } = response.data;
 
-            const hospitaisNormalizados =
-                normalizarHospitais(lugares);
-
-            setHospitais(hospitaisNormalizados);
-
-            if (hospitaisNormalizados.length === 0) {
-                setErro(
-                    "Nenhum hospital encontrado nessa região."
-                );
+            if (
+                typeof latitude !== "number" ||
+                typeof longitude !== "number"
+            ) {
+                setErro("Endereço não encontrado.");
+                setCarregando(false);
+                return;
             }
+
+            await buscarHospitaisNoBackend(
+                latitude,
+                longitude
+            );
         } catch (error: any) {
             console.error(
-                "Erro ao buscar hospitais:",
+                "Erro ao buscar endereço:",
                 error.response?.data || error.message
             );
 
-            setHospitais([]);
-
-            if (error.response?.data?.error) {
+            if (error.response?.status === 404) {
+                setErro("Endereço não encontrado.");
+            } else if (error.response?.data?.error) {
                 setErro(error.response.data.error);
             } else {
-                setErro(
-                    "Não foi possível consultar os hospitais."
-                );
+                setErro("Erro ao tentar buscar este endereço.");
             }
-        } finally {
+
+            setHospitais([]);
             setCarregando(false);
         }
-    },
-    []
-);
-
-const buscarPorGPS = React.useCallback(async () => {
-    setCarregando(true);
-    setErro("");
-
-    try {
-        const { status } =
-            await Location.requestForegroundPermissionsAsync();
-
-        if (status !== "granted") {
-            setErro("Permissão de localização negada.");
-            setCarregando(false);
-            return;
-        }
-
-        const localAtual =
-            await Location.getCurrentPositionAsync({
-                accuracy: Location.Accuracy.Balanced,
-            });
-
-        await buscarHospitaisNoBackend(
-            localAtual.coords.latitude,
-            localAtual.coords.longitude
-        );
-    } catch (error) {
-        console.error(
-            "Erro ao capturar localização:",
-            error
-        );
-
-        setErro(
-            "Erro ao capturar sua localização atual."
-        );
-        setCarregando(false);
-    }
-}, [buscarHospitaisNoBackend]);
-
-const buscarPorEnderecoTexto = async () => {
-    const endereco = enderecoAtual.trim();
-
-    if (!endereco) {
-        setErro("Digite um endereço para pesquisar.");
-        return;
-    }
-
-    setCarregando(true);
-    setErro("");
-    setHospitais([]);
-
-    try {
-        const response = await axios.get(
-            `${API_URL}/geocode`,
-            {
-                params: {
-                    address: endereco,
-                },
-            }
-        );
-
-        const { latitude, longitude } = response.data;
-
-        if (
-            typeof latitude !== "number" ||
-            typeof longitude !== "number"
-        ) {
-            setErro("Endereço não encontrado.");
-            setCarregando(false);
-            return;
-        }
-
-        await buscarHospitaisNoBackend(
-            latitude,
-            longitude
-        );
-    } catch (error: any) {
-        console.error(
-            "Erro ao buscar endereço:",
-            error.response?.data || error.message
-        );
-
-        if (error.response?.status === 404) {
-            setErro("Endereço não encontrado.");
-        } else if (error.response?.data?.error) {
-            setErro(error.response.data.error);
-        } else {
-            setErro("Erro ao tentar buscar este endereço.");
-        }
-
-        setHospitais([]);
-        setCarregando(false);
-    }
-};
+    };
 
     React.useEffect(() => {
         buscarPorGPS();
@@ -332,10 +331,28 @@ const buscarPorEnderecoTexto = async () => {
 
     return (
         <SafeAreaView style={styles.container}>
+        <View style={styles.screen}>
             <View style={styles.header}>
+                <Pressable
+                    onPress={() => navigation.replace("Home")}
+                    style={styles.backButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Voltar para a página inicial"
+                >
+                    <Text style={styles.backText}>‹</Text>
+                </Pressable>
+
+                <Text style={styles.headerTitle}>
+                    Buscar hospitais
+                </Text>
+
+                <View style={styles.headerSpacer} />
+            </View>
+
+            <View style={styles.searchContainer}>
                 <TextInput
                     style={styles.enderecoInput}
-                    placeholder="Digite um endereço e aperte Enter"
+                    placeholder="Digite um endereço"
                     placeholderTextColor="#344759"
                     value={enderecoAtual}
                     onChangeText={setEnderecoAtual}
@@ -378,18 +395,12 @@ const buscarPorEnderecoTexto = async () => {
 
                 {hospitais.map((hospital, index) => (
                     <Pressable
-                        key={
-                            hospital.id ||
-                            `${hospital.nome}-${index}`
-                        }
+                        key={hospital.id || `${hospital.nome}-${index}`}
                         style={styles.card}
                         onPress={() =>
-                            navigation.navigate(
-                                "HospitalDetalhes",
-                                {
-                                    hospital,
-                                }
-                            )
+                            navigation.navigate("HospitalDetalhes", {
+                                hospital,
+                            })
                         }
                     >
                         <Text style={styles.cardTitle}>
@@ -409,7 +420,6 @@ const buscarPorEnderecoTexto = async () => {
                                 {hospital.status}
                             </Text>
                         </View>
-
                         {hospital.telefone ? (
                             <Text style={styles.cardPhone}>
                                 {hospital.telefone}
@@ -418,9 +428,8 @@ const buscarPorEnderecoTexto = async () => {
                     </Pressable>
                 ))}
 
-                <View style={{ height: 8 }} />
+                <View style={{ height: 24 }} />
             </ScrollView>
-
             <View style={styles.bottomNav}>
                 <Pressable style={styles.navItem}>
                     <Image
@@ -428,7 +437,6 @@ const buscarPorEnderecoTexto = async () => {
                         style={styles.navIcon}
                     />
                 </Pressable>
-
                 <Pressable
                     style={[
                         styles.navItem,
@@ -443,9 +451,7 @@ const buscarPorEnderecoTexto = async () => {
 
                 <Pressable
                     style={styles.navItem}
-                    onPress={() =>
-                        navigation.replace("Home")
-                    }
+                    onPress={() => navigation.replace("Home")}
                 >
                     <Image
                         source={Patinha}
@@ -455,9 +461,7 @@ const buscarPorEnderecoTexto = async () => {
 
                 <Pressable
                     style={styles.navItem}
-                    onPress={() =>
-                        navigation.replace("Alimentos")
-                    }
+                    onPress={() => navigation.replace("Alimentos")}
                 >
                     <Image
                         source={Racao}
@@ -468,9 +472,7 @@ const buscarPorEnderecoTexto = async () => {
                 <Pressable
                     style={styles.navItem}
                     onPress={() =>
-                        navigation.navigate(
-                            "ConfiguracaoTutor"
-                        )
+                        navigation.navigate("ConfiguracaoTutor")
                     }
                 >
                     <Image
@@ -479,7 +481,8 @@ const buscarPorEnderecoTexto = async () => {
                     />
                 </Pressable>
             </View>
-        </SafeAreaView>
+        </View>
+    </SafeAreaView>
     );
 };
 
@@ -488,34 +491,74 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#344759",
     },
+header: {
+    height: 80,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    backgroundColor: "#D4E9FF",
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+},
+screen: {
+    flex: 1,
+    minHeight: 0,
+    backgroundColor: "#344759",
+},
+backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+},
 
-    header: {
-        paddingHorizontal: 24,
-        paddingTop: 16,
-        paddingBottom: 8,
-        backgroundColor: "#344759",
-    },
+backText: {
+    fontFamily: "MuseoModerno-Regular",
+    fontSize: 34,
+    color: "#344759",
+    lineHeight: 36,
+    marginTop: -4,
+},
 
-    enderecoInput: {
-        height: 48,
-        backgroundColor: "#f8f8f8",
-        borderRadius: 16,
-        paddingHorizontal: 16,
-        color: "#344759",
-        fontSize: 14,
-        fontFamily: "MuseoModerno-Regular",
-    },
+headerTitle: {
+    fontFamily: "MuseoModerno-Bold",
+    fontSize: 18,
+    color: "#344759",
+},
 
-    contentArea: {
-        flex: 1,
-        backgroundColor: "#344759",
-    },
+headerSpacer: {
+    width: 40,
+},
 
-    contentContainer: {
-        paddingHorizontal: 24,
-        paddingTop: 16,
-        paddingBottom: 24,
-    },
+searchContainer: {
+    paddingHorizontal: 14,
+    paddingTop: 12,
+    paddingBottom: 12,
+    backgroundColor: "#344759",
+},
+
+enderecoInput: {
+    height: 48,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    color: "#344759",
+    fontSize: 14,
+    fontFamily: "MuseoModerno-Regular",
+},
+
+contentArea: {
+    flex: 1,
+    minHeight: 0,
+    backgroundColor: "#344759",
+},
+
+contentContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 4,
+    paddingBottom: 24,
+},
 
     loadingContainer: {
         flexDirection: "row",
@@ -593,16 +636,18 @@ const styles = StyleSheet.create({
     },
 
     bottomNav: {
-        flexDirection: "row",
-        justifyContent: "space-around",
-        alignItems: "center",
-        backgroundColor: "#d4e9ff",
-        paddingVertical: 12,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        borderTopWidth: 1,
-        borderColor: "#336699",
-        flexShrink: 0,
+    height: 72,
+    flexShrink: 0,
+    zIndex: 10,
+    elevation: 10,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: "#D4E9FF",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderTopWidth: 1,
+    borderColor: "#336699",
     },
 
     navItem: {

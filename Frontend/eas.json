@@ -12,7 +12,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://nasce-um-tg-production.up.railway.app"
+        "EXPO_PUBLIC_API_URL_WEB": "https://api.example.com",
+        "EXPO_PUBLIC_API_MAPS": "https://api-staging.exemplo.com"
       }
     },
     "preview2": {
@@ -20,7 +21,10 @@
         "gradleCommand": "app:assembleRealease"
       }
     },
-    "production": {}
+    "production": {
+      "autoIncrement": true,
+      "environment": "production"
+    }
   },
   "submit": {
     "production": {}

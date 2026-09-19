@@ -13,7 +13,7 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL_WEB": "https://api.example.com",
-        "EXPO_PUBLIC_API_MAPS": "https://api-staging.exemplo.com"
+        "EXPO_PUBLIC_API_MAPS": "https://api.example.com"
       }
     },
     "preview2": {
@@ -21,10 +21,7 @@
         "gradleCommand": "app:assembleRealease"
       }
     },
-    "production": {
-      "autoIncrement": true,
-      "environment": "production"
-    }
+    "production": {}
   },
   "submit": {
     "production": {}

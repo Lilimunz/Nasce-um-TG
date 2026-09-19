@@ -11,18 +11,14 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import Calendario from "../../assets/images/calendario.png";
-import Localizacao from "../../assets/images/maps.png";
-import Patinha from "../../assets/images/patinha.png";
-import Configuracao from "../../assets/images/config.png";
-import Racao from "../../assets/images/racao.png";
+import BarraNavegacao from '../components/BarraNavegacao';
 
 const API_URL =
     Platform.OS === "web"
         ? process.env.EXPO_PUBLIC_API_URL_WEB ||
-          "http://localhost:3000"
+        "http://localhost:3000"
         : process.env.EXPO_PUBLIC_API_MAPS ||
-          "http://10.0.2.2:3000";
+        "http://10.0.2.2:3000";
 
 const getPetEmoji = (especie) => {
     if (!especie) {
@@ -51,7 +47,7 @@ export function PginaPrincipal({ navigation }) {
                 setPets([]);
                 return;
             }
-            
+
             // Buscar dados frescos do backend
             const response = await axios.get(`${API_URL}/tutor/${codigoTutor}/perfil`);
             if (response.data && response.data.pets) {
@@ -142,32 +138,7 @@ export function PginaPrincipal({ navigation }) {
             </ScrollView>
 
             {/* Bottom Navigation */}
-            <View style={styles.bottomNav}>
-                <TouchableOpacity style={styles.navItem}>
-                    <Image source={Calendario} style={styles.navIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.navItem}
-                    onPress={() => navigation.replace("Hospitais")}
-                >
-                    <Image source={Localizacao} style={styles.navIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>
-                    <Image source={Patinha} style={styles.navIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.navItem}
-                    onPress={() => navigation.replace("Alimentos")}
-                >
-                    <Image source={Racao} style={styles.navIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.navItem}
-                    onPress={() => navigation.navigate("ConfiguracaoTutor")}
-                >
-                    <Image source={Configuracao} style={styles.navIcon} />
-                </TouchableOpacity>
-            </View>
+            <BarraNavegacao navigation={navigation} active="pets" />
         </SafeAreaView>
     );
 }

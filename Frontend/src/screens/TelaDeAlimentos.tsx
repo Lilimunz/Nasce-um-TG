@@ -7,15 +7,8 @@ import {
   Pressable,
   Image,
 } from "react-native";
+import BarraNavegacao from "../components/BarraNavegacao";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-// Image assets
-const Calendario = require("../../assets/images/calendario.png");
-const Localizacao = require("../../assets/images/maps.png");
-const Patinha = require("../../assets/images/patinha.png");
-const Configuracao = require("../../assets/images/config.png");
-const Racao = require("../../assets/images/racao.png");
-
 // Dados dos alimentos liberados
 const alimentosLiberados = [
   {
@@ -150,35 +143,7 @@ const TelaDeAlimentos = ({ navigation }) => {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <Pressable
-          style={styles.navItem}
-          onPress={() => navigation.replace("Home")}
-        >
-          <Image source={Calendario} style={styles.navIcon} />
-        </Pressable>
-        <Pressable
-          style={styles.navItem}
-          onPress={() => navigation.replace("Hospitais")}
-        >
-          <Image source={Localizacao} style={styles.navIcon} />
-        </Pressable>
-        <Pressable
-          style={styles.navItem}
-          onPress={() => navigation.replace("Home")}
-        >
-          <Image source={Patinha} style={styles.navIcon} />
-        </Pressable>
-        <Pressable style={[styles.navItem, styles.navItemActive]}>
-          <Image source={Racao} style={styles.navIcon} />
-        </Pressable>
-        <Pressable
-          style={styles.navItem}
-          onPress={() => navigation.navigate("ConfiguracaoTutor")}
-        >
-          <Image source={Configuracao} style={styles.navIcon} />
-        </Pressable>
-      </View>
+      <BarraNavegacao navigation={navigation} active="alimentos" />
     </SafeAreaView>
   );
 };

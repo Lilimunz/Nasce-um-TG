@@ -3,7 +3,7 @@ import { Text, View, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { InputCustomizado } from "../components/InputFields";
 import { useLogin } from "../hooks/useLogin";
-import { styles } from './PginaDeLogInStyles';
+import { styles } from '../styles/PginaDeLogInStyles';
 
 import Facebook from "../../assets/images/facebook.svg"
 import Google from "../../assets/images/google.svg"

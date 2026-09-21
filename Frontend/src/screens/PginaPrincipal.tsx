@@ -6,19 +6,12 @@ import {
     TouchableOpacity,
     ScrollView,
     Image,
-    Platform
-} from 'react-native';
+    } from 'react-native';
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import api from '../services/api';
 import BarraNavegacao from '../components/BarraNavegacao';
 
-const API_URL =
-    Platform.OS === "web"
-        ? process.env.EXPO_PUBLIC_API_URL_WEB ||
-        "http://localhost:3000"
-        : process.env.EXPO_PUBLIC_API_MAPS ||
-        "http://10.0.2.2:3000";
 
 const getPetEmoji = (especie) => {
     if (!especie) {
@@ -49,7 +42,7 @@ export function PginaPrincipal({ navigation }) {
             }
 
             // Buscar dados frescos do backend
-            const response = await axios.get(`${API_URL}/tutor/${codigoTutor}/perfil`);
+            const response = await api.get(`/tutor/${codigoTutor}/perfil`);
             if (response.data && response.data.pets) {
                 setPets(Array.isArray(response.data.pets) ? response.data.pets : []);
                 // Armazenar no AsyncStorage para uso offline

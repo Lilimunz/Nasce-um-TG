@@ -1,18 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import api from '../services/api';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const API_URL =
-    Platform.OS === "web"
-        ? process.env.EXPO_PUBLIC_API_URL_WEB ||
-          "http://localhost:3000"
-        : process.env.EXPO_PUBLIC_API_MAPS ||
-          "http://10.0.2.2:3000";
 const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID;
 const GOOGLE_ANDROID_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
 export function useLogin(navigation: any) {
@@ -37,7 +31,7 @@ useEffect(() => {
           const googleUser = await userInfoResponse.json();
 
           // Passo B: Manda o e-mail e nome para o backend
-          const backendResponse = await axios.post(`${API_URL}/login-google`, {
+          const backendResponse = await api.post(`/login-google`, {
             email: googleUser.email,
             nome: googleUser.name,
           });
@@ -92,7 +86,7 @@ useEffect(() => {
         }
 
         try {
-            const response = await axios.post(`${API_URL}/login`, {
+            const response = await api.post(`/login`, {
                 email: emailNormalizado,
                 senha: senhaNormalizada,
             });
@@ -116,7 +110,7 @@ useEffect(() => {
                 }
                 await AsyncStorage.setItem('emailUsuario', emailNormalizado);
                 try {
-                    const perfilResponse = await axios.get(`${API_URL}/tutor/${response.data.codigo_tutor}/perfil`);
+                    const perfilResponse = await api.get(`/tutor/${response.data.codigo_tutor}/perfil`);
                     if (perfilResponse.data && perfilResponse.data.pets) {
                         await AsyncStorage.setItem('petsList', JSON.stringify(perfilResponse.data.pets));
                     }
@@ -125,7 +119,7 @@ useEffect(() => {
                 }
             } else {
                 try {
-                    const usuarioResponse = await axios.get(`${API_URL}/usuario/${encodeURIComponent(emailNormalizado)}`)
+                    const usuarioResponse = await api.get(`/usuario/${encodeURIComponent(emailNormalizado)}`)
                     if (usuarioResponse.data && usuarioResponse.data.nome) {
                         await AsyncStorage.setItem('nomeUsuario', usuarioResponse.data.nome);
                         await AsyncStorage.setItem('emailUsuario', emailNormalizado);

@@ -1,8 +1,8 @@
 import * as React from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView, Linking, Platform } from "react-native";
+import { View, Text, StyleSheet, Pressable, ScrollView, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Path, Circle } from "react-native-svg";
-import axios from "axios";
+import api from "../services/api";
 
 const BackIcon = () => (
     <Svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -35,10 +35,6 @@ const DirectionsIcon = () => (
     </Svg>
 );
 
-const API_URL =
-    Platform.OS === "web"
-        ? process.env.EXPO_PUBLIC_API_URL_WEB || "http://localhost:3000"
-        : process.env.EXPO_PUBLIC_API_MAPS || "http://10.0.2.2:3000";
 
 const translateType = (type) => {
     const typesMap = {
@@ -59,15 +55,9 @@ const PginaHospitalDetalhes = ({ route, navigation }) => {
 
 React.useEffect(() => {
     if (hospital?.id && !telefone) {
-        const url = `${API_URL}/hospitais/detalhes/${hospital.id}`;
+        const url = `/hospitais/detalhes/${hospital.id}`;
 
-        if (!API_URL) {
-            console.error("API_URL não foi configurada.");
-            setBuscandoTel(false);
-            return;
-        }
-
-        axios
+        api
             .get(url, { timeout: 10000 })
             .then((res) => {
                 const phone =
@@ -88,7 +78,7 @@ React.useEffect(() => {
                     );
                 } else if (err.request) {
                     console.error(
-                        "Servidor não respondeu. Verifique API_URL, IP, porta e conexão."
+                        "Servidor não respondeu. Verifique a URL da API e a conexão."
                     );
                 } else {
                     console.error("Erro ao configurar requisição:", err.message);

@@ -9,19 +9,12 @@ import {
     Alert,
     Image,
     ActivityIndicator,
-    Platform,
-} from "react-native";
+    } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+import api from "../services/api";
 import * as ImagePicker from "expo-image-picker";
 
-const API_URL =
-    Platform.OS === "web"
-        ? process.env.EXPO_PUBLIC_API_URL_WEB ||
-          "http://localhost:3000"
-        : process.env.EXPO_PUBLIC_API_MAPS ||
-          "http://10.0.2.2:3000";
 
 // Image assets
 const Calendario = require("../../assets/images/calendario.png");
@@ -90,7 +83,7 @@ const PginaDeCadia = ({ navigation }) => {
                 return;
             }
 
-            await axios.post(`${API_URL}/pet`, {
+            await api.post(`/pet`, {
                 nome,
                 especie,
                 peso: peso || "0",
@@ -100,8 +93,8 @@ const PginaDeCadia = ({ navigation }) => {
 
             // Sincronizar pets com o backend
             try {
-                const perfilResponse = await axios.get(
-                    `${API_URL}/tutor/${codigoTutor}/perfil`
+                const perfilResponse = await api.get(
+                    `/tutor/${codigoTutor}/perfil`
                 );
                 if (perfilResponse.data && perfilResponse.data.pets) {
                     await AsyncStorage.setItem(

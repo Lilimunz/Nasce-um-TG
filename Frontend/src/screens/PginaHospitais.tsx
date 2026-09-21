@@ -3,8 +3,7 @@ import * as Location from "expo-location";
 import {
     ActivityIndicator,
     Image,
-    Platform,
-    Pressable,
+        Pressable,
     ScrollView,
     StyleSheet,
     Text,
@@ -12,12 +11,8 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import axios from "axios";
+import api from "../services/api";
 
-const API_URL =
-    Platform.OS === "web"
-        ? process.env.EXPO_PUBLIC_API_URL_WEB || "http://localhost:3000"
-        : process.env.EXPO_PUBLIC_API_MAPS || "http://10.0.2.2:3000";
 
 // Image assets
 const Calendario = require("../../assets/images/calendario.png");
@@ -183,8 +178,8 @@ const PginaHospitais = ({
             setErro("");
 
             try {
-                const response = await axios.get(
-                    `${API_URL}/hospitais`,
+                const response = await api.get(
+                    `/hospitais`,
                     {
                         params: {
                             lat,
@@ -282,8 +277,8 @@ const PginaHospitais = ({
         setHospitais([]);
 
         try {
-            const response = await axios.get(
-                `${API_URL}/geocode`,
+            const response = await api.get(
+                `/geocode`,
                 {
                     params: {
                         address: endereco,

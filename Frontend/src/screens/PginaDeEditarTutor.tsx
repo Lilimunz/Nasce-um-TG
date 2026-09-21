@@ -8,18 +8,11 @@ import {
   Pressable,
   Alert,
   ActivityIndicator,
-  Platform,
-} from "react-native";
+  } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+import api from "../services/api";
 
-const API_URL =
-    Platform.OS === "web"
-        ? process.env.EXPO_PUBLIC_API_URL_WEB ||
-          "http://localhost:3000"
-        : process.env.EXPO_PUBLIC_API_MAPS ||
-          "http://10.0.2.2:3000";
 
 const PginaDeEditarTutor = ({ navigation, route }) => {
   const tutorData = route?.params?.tutorData;
@@ -62,7 +55,7 @@ const PginaDeEditarTutor = ({ navigation, route }) => {
 
     setSalvando(true);
     try {
-      const response = await axios.put(`${API_URL}/tutor/${codigoTutor}`, {
+      const response = await api.put(`/tutor/${codigoTutor}`, {
         nome: nome.trim(),
         email: email.trim(),
       });

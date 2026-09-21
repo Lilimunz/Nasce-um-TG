@@ -12,8 +12,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL_WEB": "https://api.example.com",
-        "EXPO_PUBLIC_API_MAPS": "https://api.example.com"
+        "EXPO_PUBLIC_API_URL": "https://api.example.com"
       }
     },
     "preview2": {

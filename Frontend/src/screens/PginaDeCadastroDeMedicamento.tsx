@@ -7,19 +7,12 @@ import {
   Pressable,
   TextInput,
   Alert,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+import api from "../services/api";
 import { InputCustomizado } from "../components/InputFields";
 
-const API_URL =
-    Platform.OS === "web"
-        ? process.env.EXPO_PUBLIC_API_URL_WEB ||
-          "http://localhost:3000"
-        : process.env.EXPO_PUBLIC_API_MAPS ||
-          "http://10.0.2.2:3000";
 const CLASSIFICACOES = [
   "Antibiótico",
   "Anti-inflamatório",
@@ -69,6 +62,11 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
   const [showFrequenciaOptions, setShowFrequenciaOptions] = React.useState(false);
   const [salvando, setSalvando] = React.useState(false);
 
+  const isApiError = (
+    erro: unknown
+  ): erro is { response?: { data?: any; status?: number } } =>
+    typeof erro === "object" && erro !== null && "response" in erro;
+
   React.useEffect(() => {
     carregarPets();
   }, []);
@@ -87,7 +85,7 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
         return;
       }
 
-      const response = await axios.get(`${API_URL}/tutor/${codigoTutor}/perfil`);
+      const response = await api.get(`/tutor/${codigoTutor}/perfil`);
       if (response.data?.pets) {
         setPets(response.data.pets);
       }
@@ -132,7 +130,7 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
   };
 
   const obterMensagemErro = (erro: unknown) => {
-    if (axios.isAxiosError(erro)) {
+    if (isApiError(erro)) {
       const data = erro.response?.data;
       if (typeof data === "string") {
         return data;
@@ -156,11 +154,6 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
   };
 
   const handleConfirmar = async () => {
-    if (!API_URL) {
-      Alert.alert("Erro", "API não configurada.");
-      return;
-    }
-
     if (!selectedPet?.codigo_pet) {
       Alert.alert("Atenção", "Selecione o pet.");
       return;
@@ -189,7 +182,7 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
 
     setSalvando(true);
     try {
-      const response = await axios.post(`${API_URL}/medicamento`, {
+      const response = await api.post(`/medicamento`, {
         codigo_pet: Number(selectedPet.codigo_pet),
         nome: nomeMedicamento.trim(),
         classificacao,
@@ -207,7 +200,7 @@ const PginaDeCadastroDeMedicamento = ({ navigation, route }) => {
       navigation.goBack();
     } catch (erro) {
       const mensagem = obterMensagemErro(erro);
-      if (axios.isAxiosError(erro)) {
+      if (isApiError(erro)) {
         console.error("Erro ao cadastrar medicamento:", {
           status: erro.response?.status,
           data: erro.response?.data,

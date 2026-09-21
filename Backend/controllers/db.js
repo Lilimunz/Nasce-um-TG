@@ -1,5 +1,6 @@
 require('dotenv').config()
 const mysql = require('mysql2')
+const fs = require('fs');
 
 const connection = mysql.createPool({
     host: process.env.DB_HOST,
@@ -7,6 +8,9 @@ const connection = mysql.createPool({
     database: process.env.DB_DATABASE,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
+    ssl: {
+        ca: fs.readFileSync('./pet.pem') // <-- Ativa a conexão segura exigida pelo Aiven
+    },
     charset: 'utf8mb4',
     waitForConnections: true,
     connectionLimit: 10,

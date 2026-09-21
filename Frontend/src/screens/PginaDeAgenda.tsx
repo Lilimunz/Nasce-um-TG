@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+import api from "../services/api";
 
 import CalendarioModal from "../components/CalendarioModal";
 import BarraNavegacao from "../components/BarraNavegacao";
@@ -30,10 +30,6 @@ const ACCENT = "#336699";
 const PETS_CACHE_KEY = "petsList";
 const REMINDERS_CACHE_KEY = "@nasce_um_tg_lembretes_cache";
 
-const API_URL =
-  Platform.OS === "web"
-    ? process.env.EXPO_PUBLIC_API_URL_WEB || "http://localhost:3000"
-    : process.env.EXPO_PUBLIC_API_MAPS || "http://10.0.2.2:3000";
 
 const CATEGORIES = [
   "Veterinário",
@@ -190,8 +186,8 @@ const PaginaDeAgenda = ({ navigation }: AgendaProps) => {
         return;
       }
 
-      const response = await axios.get(
-        `${API_URL}/tutor/${codigoTutor}/perfil`
+      const response = await api.get(
+        `/tutor/${codigoTutor}/perfil`
       );
 
       const petsFromApi = Array.isArray(response.data?.pets)

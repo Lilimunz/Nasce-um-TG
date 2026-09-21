@@ -1,14 +1,8 @@
 import * as React from "react";
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert, Platform } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import axios from "axios";
+import api from "../services/api";
 
-const API_URL =
-    Platform.OS === "web"
-        ? process.env.EXPO_PUBLIC_API_URL_WEB ||
-          "http://localhost:3000"
-        : process.env.EXPO_PUBLIC_API_MAPS ||
-          "http://10.0.2.2:3000";
 
 const getPetEmoji = (especie) => {
   if (!especie) {
@@ -59,7 +53,7 @@ const PetProfile = ({ route, navigation }) => {
 
     setCarregando(true);
     try {
-      const response = await axios.get(`${API_URL}/pet/${petData.codigo_pet}`);
+      const response = await api.get(`/pet/${petData.codigo_pet}`);
       if (response.data && !response.data.erro) {
         setPet(response.data);
         setErro('');
@@ -86,8 +80,8 @@ const PetProfile = ({ route, navigation }) => {
     setCarregandoVacinas(true);
     setErroVacinas('');
     try {
-      const response = await axios.get(
-        `${API_URL}/pet/${petData.codigo_pet}/vacinas`
+      const response = await api.get(
+        `/pet/${petData.codigo_pet}/vacinas`
       );
 
       if (Array.isArray(response.data)) {
@@ -140,7 +134,7 @@ const PetProfile = ({ route, navigation }) => {
           onPress: async () => {
             setExcluindo(true);
             try {
-              const response = await axios.delete(`${API_URL}/pet/${codigoPet}`);
+              const response = await api.delete(`/pet/${codigoPet}`);
               if (response.data?.erro) {
                 Alert.alert("Erro", response.data.erro);
                 return;

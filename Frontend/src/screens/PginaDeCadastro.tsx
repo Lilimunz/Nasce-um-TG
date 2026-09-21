@@ -1,17 +1,11 @@
 import * as React from "react";
-import axios  from 'axios';
-import { StyleSheet, Text, TextInput, View, Pressable, Alert, Platform } from "react-native";
+import api from "../services/api";
+import { StyleSheet, Text, TextInput, View, Pressable, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Eye from "../../assets/images/eye.svg";
 import { InputCustomizado } from "../components/InputFields";
 
-const API_URL =
-    Platform.OS === "web"
-        ? process.env.EXPO_PUBLIC_API_URL_WEB ||
-          "http://localhost:3000"
-        : process.env.EXPO_PUBLIC_API_MAPS ||
-          "http://10.0.2.2:3000";
 
 const PginaDeCadastro = ({ navigation }) => {
   const [nome, setNome] = React.useState("");
@@ -34,8 +28,7 @@ const handleCadastro = async () => {
     }
 
     try {
-      // 3. ATENÇÃO: Usa o IP da tua máquina em vez de localhost!
-      const response = await axios.post(`${API_URL}/tutor`, {
+      const response = await api.post(`/tutor`, {
         nome,
         email,
         senha,

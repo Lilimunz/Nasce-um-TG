@@ -8,18 +8,11 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
-  Platform,
-} from "react-native";
+  } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
+import api from "../services/api";
 
-const API_URL =
-    Platform.OS === "web"
-        ? process.env.EXPO_PUBLIC_API_URL_WEB ||
-          "http://localhost:3000"
-        : process.env.EXPO_PUBLIC_API_MAPS ||
-          "http://10.0.2.2:3000";
 
 interface Pet {
   codigo_pet: number;
@@ -73,7 +66,7 @@ const PginaDeCadastroDeVacina = ({ navigation, route }) => {
         return;
       }
 
-      const response = await axios.get(`${API_URL}/tutor/${codigoTutor}/perfil`);
+      const response = await api.get(`/tutor/${codigoTutor}/perfil`);
       if (response.data && response.data.pets) {
         setPets(response.data.pets);
       }
@@ -106,7 +99,7 @@ const PginaDeCadastroDeVacina = ({ navigation, route }) => {
 
     setCarregando(true);
     try {
-      const response = await axios.post(`${API_URL}/vacina`, {
+      const response = await api.post(`/vacina`, {
         codigo_pet: selectedPet.codigo_pet,
         nome: nomeVacina,
         tipo: tipoVacina,

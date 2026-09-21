@@ -1,10 +1,9 @@
 import * as React from "react"
 import { View, Text, TextInput, Pressable, StyleSheet, Alert } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
-import axios from "axios"
+import api from "../services/api"
 import Eye from "../../assets/images/eye.svg" // Reaproveitando seu SVG do login!
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL
 
 const PginaDeEsqueciASenha = ({ navigation }) => {
   const [step, setStep] = React.useState(1)
@@ -41,7 +40,7 @@ const PginaDeEsqueciASenha = ({ navigation }) => {
     }
 
     try {
-      const response = await axios.post(`${API_URL}/esqueci-senha`, { email })
+      const response = await api.post(`/esqueci-senha`, { email })
       if (response.data.erro) {
         Alert.alert("Erro", response.data.erro)
         return
@@ -62,7 +61,7 @@ const PginaDeEsqueciASenha = ({ navigation }) => {
     }
 
     try {
-      const response = await axios.post(`${API_URL}/redefinir-senha`, {
+      const response = await api.post(`/redefinir-senha`, {
         email,
         codigo: code,
         novaSenha: newPassword

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const apiUrl = 'https://nasce-um-tg.onrender.com';
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 
 if (!apiUrl) {
   throw new Error(

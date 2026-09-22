@@ -10,13 +10,7 @@
     "preview": {
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-    "EXPO_PUBLIC_API_URL": "https://nasce-um-tg.onrender.com",
-    "EXPO_PUBLIC_ENV": "production",
-    "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "540930530733-hpn3cu2dv71iemvefq07dq4140lv1a0f.apps.googleusercontent.com",
-    "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "1050795602078-beo2tmvh32oha4v7rait85v42mgfp7sr.apps.googleusercontent.com"
-  }
+      }
     },
     "preview2": {
       "android": {

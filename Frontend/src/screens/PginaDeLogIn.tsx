@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { InputCustomizado } from "../components/InputFields";
 import { useLogin } from "../hooks/useLogin";
 import { styles } from '../styles/PginaDeLogInStyles';
-
+Alert.alert("Link no APK:", process.env.EXPO_PUBLIC_API_URL || "Nenhum link encontrado!");
 import Facebook from "../../assets/images/facebook.svg"
 import Google from "../../assets/images/google.svg"
 import Eye from "../../assets/images/eye.svg"
